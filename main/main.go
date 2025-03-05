@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -49,33 +50,65 @@ func main() {
 	if err != nil {
 		log.Fatal("DBに接続できません", err)
 	}
-  
+
 	db.AutoMigrate(&Categories{}, &Todos{})
 	r := gin.Default()
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello World",
-		})
+	//###############################################################################
+	r.GET("/v1/rest/todo", func(c *gin.Context) {
+		var todos []Todos
+		db.Find(&todos)
+		c.JSON(http.StatusOK, todos)
 	})
 
-	r.POST("/POST", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "hi POST postman!",
-		})
+	r.POST("/v1/rest/todo", func(c *gin.Context) {
+		var todo Todos
+		if err := c.ShouldBindJSON(&todo); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		db.Create(&todo)
+		c.JSON(http.StatusOK, todo)
 	})
 
-	r.PUT("/PUT", func(c *gin.Context) {
+	r.PUT("/v1/rest/todo", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "hi PUT postman!",
 		})
 	})
 
-	r.DELETE("/DELETE", func(c *gin.Context) {
+	r.DELETE("/v1/rest/todo", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "hi DELETE postman!",
+		})
+	})
+	//###############################################################################
+
+	//###############################################################################
+	r.GET("/v1/rest/category", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Hello World",
+		})
+	})
+
+	r.POST("/v1/rest/category", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "hi POST postman!",
+		})
+	})
+
+	r.PUT("/v1/rest/category", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "hi PUT postman!",
+		})
+	})
+
+	r.DELETE("/v1/rest/category", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "hi DELETE postman!",
 		})
 	})
 
+	//###############################################################################
 	r.Run(":8080")
 }
