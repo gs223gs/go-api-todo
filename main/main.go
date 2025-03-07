@@ -18,18 +18,30 @@ func createDSN(host, user, password, dbname, port string) string {
 }
 
 type Todos struct {
-	Id          uint      `gorm:"primary_key"`
-	Title       string    `gorm:"size:255"`
-	Content     string    `gorm:"text"`
-	Category_Id int       `gorm:"size:100;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:Category_Id;references:Id"`
-	Is_Done     bool      `gorm:"default:false"`
-	Created_at  time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	Update_at   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	Id          uint       `gorm:"primary_key;autoIncrement"`
+	Title       string     `gorm:"size:255"`
+	Content     string     `gorm:"text"`
+	Category_Id uint       `gorm:"size:100;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:Category_Id;references:Id"` //CategoriesのidでforeingKey
+	Is_Done     bool       `gorm:"default:false"`
+	Due         *time.Time `gorm:"default:NULL"` //ポインタ使用でNULL許容
+	Created_at  time.Time  `gorm:"default:CURRENT_TIMESTAMP"`
+	Update_at   time.Time  `gorm:"default:CURRENT_TIMESTAMP"`
+	Category    Categories `gorm:"foreignKey:Category_Id;references:Id"`
 }
 
 type Categories struct {
-	Id       uint   `gorm:"primary_key"`
-	Category string `gorm:"site:255"`
+	Id       uint   `gorm:"primary_key;autoIncrement"`
+	Category string `gorm:"size:255"`
+}
+
+type TodosResponse struct {
+	Id          uint
+	Title       string
+	Content     string
+	Category_id uint
+	Is_Done     bool
+	Due         string
+	Created_at  string
 }
 
 func main() {
@@ -57,24 +69,85 @@ func main() {
 	//###############################################################################
 	r.GET("/v1/rest/todo", func(c *gin.Context) {
 		var todos []Todos
-		db.Find(&todos)
-		c.JSON(http.StatusOK, todos)
+		db.Select("Id", "Title", "Content", "Category_Id", "Due", "Is_Done", "Created_at").Find(&todos)
+
+		var todosResponse []TodosResponse
+		for _, todo := range todos {
+			todosResponse = append(todosResponse, TodosResponse{
+				Id:          todo.Id,
+				Title:       todo.Title,
+				Content:     todo.Content,
+				Category_id: todo.Category_Id,
+				Is_Done:     todo.Is_Done,
+				Due: func() string {
+					if todo.Due != nil {
+						return todo.Due.Format(time.RFC3339)
+					}
+					return ""
+				}(),
+				Created_at: todo.Created_at.Format(time.RFC3339),
+			})
+		}
+
+		fmt.Println(todosResponse)
+
+		c.JSON(http.StatusOK, todosResponse)
 	})
 
 	r.POST("/v1/rest/todo", func(c *gin.Context) {
 		var todo Todos
+		var categories Categories
+		fmt.Println("a:", todo)
+		fmt.Println("C :", c)
+		// JSONからデータをバインド
+		if err := c.ShouldBindJSON(&todo); err != nil {
+			fmt.Println("Error: ", err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// JSONからCategory_Idを取得
+		category := todo.Category_Id
+		fmt.Println("Category ID:", category)
+
+		// Categoryの存在を確認
+		if err := db.First(&categories, category).Error; err != nil {
+			fmt.Println("Error: category not found")
+			c.JSON(http.StatusNotFound, gin.H{"error": "category not found"})
+			return
+		}
+
+		// TodoをDBに作成
+		db.Create(&todo)
+		c.JSON(http.StatusOK, gin.H{"messege": "Create Success"})
+	})
+
+	r.PUT("/v1/rest/todo", func(c *gin.Context) {
+		var todo Todos
+		var categories Categories
+		id := c.Param("Id")
+		category := c.Param("Category_id")
+
+		fmt.Println("ID:", id)
+		fmt.Println("Category ID:", category)
+
+		if err := db.First(&categories, category).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Category not found"})
+			return
+		}
+
+		if err := db.First(&todo, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
+			return
+		}
+
 		if err := c.ShouldBindJSON(&todo); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		db.Create(&todo)
-		c.JSON(http.StatusOK, todo)
-	})
 
-	r.PUT("/v1/rest/todo", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "hi PUT postman!",
-		})
+		db.Save(&todo)
+		c.JSON(http.StatusOK, todo)
 	})
 
 	r.DELETE("/v1/rest/todo", func(c *gin.Context) {
@@ -92,9 +165,13 @@ func main() {
 	})
 
 	r.POST("/v1/rest/category", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "hi POST postman!",
-		})
+		var Category Categories
+		if err := c.ShouldBindJSON(&Category); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		db.Create(&Category)
+		c.JSON(http.StatusOK, Category)
 	})
 
 	r.PUT("/v1/rest/category", func(c *gin.Context) {
