@@ -1,0 +1,65 @@
+build-errors.log
+*.bin
+# バイナリファイル
+*.exe
+*.dll
+*.so
+*.dylib
+
+# オブジェクトファイル
+*.o
+*.obj
+
+# ログファイル
+*.log
+
+# 一時ファイル
+*.tmp
+*.temp
+
+# IDE関連
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS関連
+.DS_Store
+Thumbs.db
+
+# その他
+*.swp
+*.bak
+*.old
+*.orig
+*.rej
+*.gz
+*.zip
+*.tar
+*.tgz
+*.bz2
+*.7z
+*.rar
+*.pyc
+*.pyo
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+*.ipr
+*.iws
+*.class
+*.project
+*.classpath
+*.settings/
+
+# Go関連
+vendor/
+*.test
+*.out
+*.cover
+*.mod
+*.sum
