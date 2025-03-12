@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/gs223gs/go-webapi-todo/structs"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -37,4 +38,28 @@ func ConnctionDb() *gorm.DB {
 	}
 
 	return db
+}
+
+func InitDB(db *gorm.DB) {
+	db.Migrator().DropTable(&structs.Todos{}, &structs.Categories{})
+	db.AutoMigrate(&structs.Categories{}, &structs.Todos{})
+	var categories = []structs.Categories{
+		{Category: "仕事"},
+		{Category: "プライベート"},
+		{Category: "勉強"},
+	}
+
+	for _, category := range categories {
+		db.Create(&category)
+	}
+
+	var todos = []structs.Todos{
+		{Title: "仕事のタスク1", Content: "仕事の内容1", Category_Id: 1, Is_Done: false},
+		{Title: "プライベートのタスク1", Content: "プライベートの内容1", Category_Id: 2, Is_Done: false},
+		{Title: "勉強のタスク1", Content: "勉強の内容1", Category_Id: 3, Is_Done: false},
+	}
+
+	for _, todo := range todos {
+		db.Create(&todo)
+	}
 }

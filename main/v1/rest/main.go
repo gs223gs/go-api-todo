@@ -4,19 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gs223gs/go-webapi-todo/controller"
 	"github.com/gs223gs/go-webapi-todo/db"
-	"github.com/gs223gs/go-webapi-todo/structs"
 )
 
 func main() {
 
-	db := db.ConnctionDb()
-
-	db.AutoMigrate(&structs.Categories{}, &structs.Todos{})
-
+	Database := db.ConnctionDb()
+	db.InitDB(Database)
 	r := gin.Default()
 
-	controller.V1RestTodo(r, db)
-	controller.V1RestCategory(r, db)
+	controller.V1RestTodo(r, Database)
+	controller.V1RestCategory(r, Database)
 
 	r.Run(":8080")
 }
