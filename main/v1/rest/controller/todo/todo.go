@@ -68,26 +68,43 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 	r.PUT("/v1/rest/todo", func(c *gin.Context) {
 		var todo structs.Todos
 		var categories structs.Categories
-		id := c.Param("Id")
-		category := c.Param("Category_id")
 
-		if err := db.First(&categories, category).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "カテゴリが存在しません"})
-			return
-		}
-
-		if err := db.First(&todo, id).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Todoが存在しません"})
-			return
-		}
-
+		// JSONデータのバインド
 		if err := c.ShouldBindJSON(&todo); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		db.Save(&todo)
-		c.JSON(http.StatusOK, todo)
+		// IDの確認
+		if todo.Id == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"messege": "Todo IDがありません"})
+			return
+		}
+
+		// Todoの確認
+		var existingTodo structs.Todos
+		if err := db.First(&existingTodo, todo.Id).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Todoが存在しません"})
+			return
+		}
+
+		// タイトルの確認
+		if todo.Title == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"messege": "Todo名がありません"})
+			return
+		}
+
+		// カテゴリの確認
+		if err := db.First(&categories, todo.Category_Id).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "カテゴリが存在しません"})
+			return
+		}
+
+		if err := db.Save(&todo).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新に失敗しました"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"messege": "更新完了"})
 	})
 
 	r.DELETE("/v1/rest/todo", func(c *gin.Context) {
@@ -99,7 +116,7 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 		}
 
 		if err := db.First(&todo, todo.Id).Error; err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "todoが存在しません"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "Todoが存在しません"})
 			return
 		}
 
