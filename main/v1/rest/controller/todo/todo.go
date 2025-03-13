@@ -1,11 +1,12 @@
-package controller
+package todo
+
 import (
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"github.com/gs223gs/go-webapi-todo/structs"
+	"gorm.io/gorm"
 )
 
 func V1RestTodo(r *gin.Engine, db *gorm.DB) {
@@ -38,18 +39,25 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 	r.POST("/v1/rest/todo", func(c *gin.Context) {
 		var todo structs.Todos
 		var categories structs.Categories
+
+		if c.ContentType() != "application/json" {
+			c.JSON(http.StatusUnsupportedMediaType, gin.H{"error": "サポートされていないメディアタイプです"})
+			return
+		}
 		// JSONからデータをバインド
 		if err := c.ShouldBindJSON(&todo); err != nil {
-
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
+		}
+		if todo.Title == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"messege": "Todo名がありません"})
 		}
 		// JSONからCategory_Idを取得
 		category := todo.Category_Id
 
 		// Categoryの存在を確認
 		if err := db.First(&categories, category).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "カテゴリが存在しません"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "カテゴリが存在しません"})
 			return
 		}
 
