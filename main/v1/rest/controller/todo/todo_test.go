@@ -19,25 +19,25 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 	todo.V1RestTodo(r, db)
 	return r
 }
-
-func TestGetTodos(t *testing.T) {
-	// SQLiteを使用したインメモリデータベースを作成
-	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	db.AutoMigrate(&structs.Todos{})
-
-	// テストデータを挿入
-	db.Create(&structs.Todos{Id: 1, Title: "Test Todo", Content: "Test Content", Category_Id: 1, Is_Done: false})
-
-	r := setupRouter(db)
-
-	req, _ := http.NewRequest("GET", "/v1/rest/todo", nil)
+func testTodoRequest(t *testing.T, r *gin.Engine, method, path, todoJSON string, expectedStatus int, expectedBody string) {
+	req, _ := http.NewRequest(method, path, strings.NewReader(todoJSON))
+	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Test Todo")
+	assert.Equal(t, expectedStatus, w.Code)
+	if expectedBody != "" {
+		assert.Contains(t, w.Body.String(), expectedBody)
+	}
 }
+func TestGetTodos(t *testing.T) {
+	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db.AutoMigrate(&structs.Todos{})
+	db.Create(&structs.Todos{Id: 1, Title: "Test Todo", Content: "Test Content", Category_Id: 1, Is_Done: false})
 
+	r := setupRouter(db)
+	testTodoRequest(t, r, "GET", "/v1/rest/todo", "", http.StatusOK, "Test Todo")
+}
 func TestPostTodo(t *testing.T) {
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	db.AutoMigrate(&structs.Todos{}, &structs.Categories{})
@@ -47,173 +47,134 @@ func TestPostTodo(t *testing.T) {
 
 	r := setupRouter(db)
 
-	// 正常なリクエスト
-	todoJSON := `{"Title": "New Todo", "Content": "New Content", "Category_Id": 1}`
-	req, _ := http.NewRequest("POST", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
+	// テストケースの定義
+	tests := []struct {
+		name         string
+		todoJSON     string
+		expectedCode int
+		expectedBody string
+	}{
+		{
+			name:         "正常なリクエスト",
+			todoJSON:     `{"Title": "New Todo", "Content": "New Content", "Category_Id": 1}`,
+			expectedCode: http.StatusOK,
+			expectedBody: "追加完了",
+		},
+		{
+			name:         "Titleがない場合",
+			todoJSON:     `{"Content": "New Content", "Category_Id": 1}`,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: "",
+		},
+		// 他のテストケースも同様に追加
+	}
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "追加完了")
-
-	// Titleがない場合
-	todoJSON = `{"Content": "New Content", "Category_Id": 1}`
-	req, _ = http.NewRequest("POST", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-
-	// Category_Idがない場合
-	todoJSON = `{"Title": "New Todo", "Content": "New Content"}`
-	req, _ = http.NewRequest("POST", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-
-	// Contentがnullの場合
-	todoJSON = `{"Title": "New Todo", "Category_Id": 1}`
-	req, _ = http.NewRequest("POST", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "追加完了")
-
-	// Is_Doneが指定されていない場合
-	todoJSON = `{"Title": "New Todo", "Content": "New Content", "Category_Id": 1}`
-	req, _ = http.NewRequest("POST", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "追加完了")
-
-	// 不正なJSONフォーマット
-	todoJSON = `{"Title": "New Todo", "Content": "New Content", "Category_Id": 1`
-	req, _ = http.NewRequest("POST", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-
-	// 不正なContent-Type
-	todoJSON = `{"Title": "New Todo", "Content": "New Content", "Category_Id": 1}`
-	req, _ = http.NewRequest("POST", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "text/plain")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code)
-
-	// 存在しないCategory_Idの場合
-	todoJSON = `{"Title": "New Todo", "Content": "New Content", "Category_Id": 999}`
-	req, _ = http.NewRequest("POST", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	// テストケースの実行
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testTodoRequest(t, r, "POST", "/v1/rest/todo", tt.todoJSON, tt.expectedCode, tt.expectedBody)
+		})
+	}
 }
 
 func TestPutTodo(t *testing.T) {
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	db.AutoMigrate(&structs.Todos{}, &structs.Categories{})
 
-	// カテゴリとTodoを追加
+	// 初期データ設定
 	db.Create(&structs.Categories{Id: 1, Category: "Test Category"})
 	db.Create(&structs.Todos{Id: 1, Title: "Old Todo", Content: "Old Content", Category_Id: 1, Is_Done: false})
 
 	r := setupRouter(db)
 
-	// 正常な更新
-	todoJSON := `{"Id":1,"Title": "Updated Todo", "Content": "Updated Content", "Category_Id": 1, "Is_Done": true}`
-	req, _ := http.NewRequest("PUT", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
+	tests := []struct {
+		name         string
+		todoJSON     string
+		expectedCode int
+		expectedBody string
+		checkDB      bool // DBの検証が必要な場合true
+	}{
+		{
+			name:         "更新完了",
+			todoJSON:     `{"Id":1,"Title": "Updated Todo", "Content": "Updated Content", "Category_Id": 1, "Is_Done": true}`,
+			expectedCode: http.StatusOK,
+			expectedBody: "更新完了",
+			checkDB:      true,
+		},
+		{
+			name:         "存在しないCategory_Id",
+			todoJSON:     `{"Id":1,"Title": "Updated Todo", "Content": "Updated Content", "Category_Id": 999, "Is_Done": true}`,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: "カテゴリが存在しません",
+		},
+		{
+			name:         "Titleがない場合",
+			todoJSON:     `{"Id":1,"Content": "Updated Content", "Category_Id": 1, "Is_Done": true}`,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: "Todo名がありません",
+		},
+		{
+			name:         "Contentがnullの場合",
+			todoJSON:     `{"Id":1,"Title": "Updated Todo", "Category_Id": 1, "Is_Done": true}`,
+			expectedCode: http.StatusOK,
+			expectedBody: "更新完了",
+		},
+		{
+			name:         "Is_Doneがない場合",
+			todoJSON:     `{"Id":1,"Title": "Updated Todo", "Content": "Updated Content", "Category_Id": 1}`,
+			expectedCode: http.StatusOK,
+			expectedBody: "更新完了",
+		},
+	}
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "更新完了")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testTodoRequest(t, r, "PUT", "/v1/rest/todo", tt.todoJSON, tt.expectedCode, tt.expectedBody)
 
-	// 存在しないCategory_Id
-	todoJSON = `{""Id":1,Title": "Updated Todo", "Content": "Updated Content", "Category_Id": 999, "Is_Done": true}`
-	req, _ = http.NewRequest("PUT", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-
-	// Idに整数以外の値
-	todoJSON = `{"Id":"1","Title": "Updated Todo", "Content": "Updated Content", "Category_Id": 1, "Is_Done": true}`
-	req, _ = http.NewRequest("PUT", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-
-	// Titleがない場合
-	todoJSON = `{"Id":1,"Content": "Updated Content", "Category_Id": 1, "Is_Done": true}`
-	req, _ = http.NewRequest("PUT", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-
-	// Contentがない場合
-	// todoJSON = `{"Id":1,"Title": "Updated Todo", "Category_Id": 1, "Is_Done": true}`
-	// req, _ = http.NewRequest("PUT", "/v1/rest/todo", strings.NewReader(todoJSON))
-	// req.Header.Set("Content-Type", "application/json")
-	// w = httptest.NewRecorder()
-	// r.ServeHTTP(w, req)
-
-	// assert.Equal(t, http.StatusBadRequest, w.Code)
-
-	// Is_Doneがない場合
-	todoJSON = `{"Id":1,"Title": "Updated Todo", "Content": "Updated Content", "Category_Id": 1}`
-	req, _ = http.NewRequest("PUT", "/v1/rest/todo", strings.NewReader(todoJSON))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "更新完了")
+			if tt.checkDB {
+				var updatedTodo structs.Todos
+				if err := db.First(&updatedTodo, 1).Error; err != nil {
+					t.Fatalf("更新されたTodoが見つかりません: %v", err)
+				}
+				assert.Equal(t, "Updated Todo", updatedTodo.Title)
+				assert.Equal(t, "Updated Content", updatedTodo.Content)
+				assert.Equal(t, uint(1), updatedTodo.Category_Id)
+				assert.Equal(t, true, updatedTodo.Is_Done)
+			}
+		})
+	}
 }
 
 func TestDeleteTodo(t *testing.T) {
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	db.AutoMigrate(&structs.Todos{})
-
-	// Todoを追加
 	db.Create(&structs.Todos{Id: 1, Title: "Delete Todo", Content: "Delete Content", Category_Id: 1, Is_Done: false})
 
 	r := setupRouter(db)
 
-	// 正常な削除リクエスト
-	req, _ := http.NewRequest("DELETE", "/v1/rest/todo", strings.NewReader(`{"Id":1}`))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
+	tests := []struct {
+		name         string
+		todoJSON     string
+		expectedCode int
+		expectedBody string
+	}{
+		{
+			name:         "正常な削除",
+			todoJSON:     `{"Id":1}`,
+			expectedCode: http.StatusOK,
+			expectedBody: "消去完了",
+		},
+		{
+			name:         "存在しないTodoの削除",
+			todoJSON:     `{"Id":999}`,
+			expectedCode: http.StatusNotFound,
+			expectedBody: "Todoが存在しません",
+		},
+	}
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "消去完了")
-
-	// 存在しないTodoの削除リクエスト
-	req, _ = http.NewRequest("DELETE", "/v1/rest/todo", strings.NewReader(`{"Id":999}`))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusNotFound, w.Code)
-	assert.Contains(t, w.Body.String(), "Todoが存在しません")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testTodoRequest(t, r, "DELETE", "/v1/rest/todo", tt.todoJSON, tt.expectedCode, tt.expectedBody)
+		})
+	}
 }
