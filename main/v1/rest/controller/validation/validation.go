@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-//! package名がvalidationのため，関数名をわざと短くしている
+// ! package名がvalidationのため，関数名をわざと短くしている
 func TodoID() {
 
 }
@@ -26,13 +26,13 @@ func TodoTitle(Title string) error {
 	return nil
 }
 
-func Check(s []string) (result map[string]error) {
+func Check(s map[string]string, db *gorm.DB) (result map[string]error) {
 	result = make(map[string]error)
-	for _,v := range s{
-		switch v {
+	for k, v := range s {
+		switch k {
 		case "TodoId":
 		case "TodoTitle":
-			if err := TodoTitle(v); err != nil{
+			if err := TodoTitle(v); err != nil {
 				result["TodoTitle"] = err
 			}
 		case "CategoryId":

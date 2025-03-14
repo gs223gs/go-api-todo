@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gs223gs/go-webapi-todo/structs"
+	"github.com/gs223gs/go-webapi-todo/controller/validation"
 	"gorm.io/gorm"
 )
 
@@ -49,14 +50,13 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		if todo.Title == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"messege": "Todo名がありません"})
+		if err := validation.TodoTitle(todo.Title); err!=nil {
+			c.JSON(http.StatusBadRequest, gin.H{"messege": err})
+			return
 		}
-		// JSONからCategory_Idを取得
-		category := todo.Category_Id
 
 		// Categoryの存在を確認
-		if err := db.First(&categories, category).Error; err != nil {
+		if err := db.First(&categories, todo.Category_Id).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "カテゴリが存在しません"})
 			return
 		}
