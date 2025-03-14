@@ -69,32 +69,24 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 		var todo structs.Todos
 		var categories structs.Categories
 
-		// JSONデータのバインド
 		if err := c.ShouldBindJSON(&todo); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// IDの確認
-		if todo.Id == 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"messege": "Todo IDがありません"})
-			return
-		}
+		// 各種チェック Id, Todo名, カテゴリ,
 
-		// Todoの確認
 		var existingTodo structs.Todos
 		if err := db.First(&existingTodo, todo.Id).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Todoが存在しません"})
 			return
 		}
 
-		// タイトルの確認
 		if todo.Title == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"messege": "Todo名がありません"})
 			return
 		}
 
-		// カテゴリの確認
 		if err := db.First(&categories, todo.Category_Id).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "カテゴリが存在しません"})
 			return
@@ -104,6 +96,9 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新に失敗しました"})
 			return
 		}
+
+		//! Update_at の更新
+		//! Dueの処理を追加
 		c.JSON(http.StatusOK, gin.H{"messege": "更新完了"})
 	})
 
