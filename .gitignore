@@ -63,3 +63,6 @@ vendor/
 *.cover
 *.mod
 *.sum
+# TOMLファイル
+*.toml
+
