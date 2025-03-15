@@ -3,11 +3,20 @@ package validation
 import (
 	"fmt"
 
+	"github.com/gs223gs/go-webapi-todo/structs"
 	"gorm.io/gorm"
 )
 
 // ! package名がvalidationのため，関数名をわざと短くしている
-func TodoID() {
+
+//.TODOIDがDBに存在するかチェック
+// 
+func TodoID(id int, db *gorm.DB) error {
+	var todo structs.Todos
+	if err := db.First(&todo, int(id)).Error; err != nil {
+		return fmt.Errorf("Todoがありません")
+	}
+	return nil
 
 }
 
@@ -43,26 +52,3 @@ func Check(s map[string]string, db *gorm.DB) (result map[string]error) {
 	}
 	return result
 }
-
-/*
-check(s スライス ) (map[string]stringerr) {
-result map[string]string
-swich
-	TodoID
-		if check {
-		,todoid :="TodoID"
-			err := checkfunc(TodoID); err != nil{
-			result[todoid] = err
-			}
-		}
-	CategoryID
-		if check{
-			return err
-		}
-	ContentType
-		if check{
-			return err
-		}
-	return result
-}
-*/
