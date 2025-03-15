@@ -1,6 +1,7 @@
 package validation_test
 
 import (
+	"fmt"
 	"testing"
 
 	"gorm.io/driver/sqlite"
@@ -48,79 +49,60 @@ func TestCheck(t *testing.T) {
 
 	tests := []struct {
 		name  string
-		input map[string]string
-		want  map[string]string
+		input map[string]any
+		want  map[string]any
 	}{
 		{
 			name: "TodoTitleが存在する場合（正常）",
-			input: map[string]string{
+			input: map[string]any{
 				"TodoTitle": "有効なタイトル",
-				"TodoID":    "1",
+				"TodoID":    1,
 			},
-			want: map[string]string{},
+			want: map[string]any{},
 		},
 		{
 			name: "無効なTodoIDが存在する場合",
-			input: map[string]string{
+			input: map[string]any{
 				"TodoID": "無効なID",
 			},
-			want: map[string]string{
+			want: map[string]any{
 				"TodoID": "無効なTodoIDです",
 			},
 		},
 		{
 			name: "存在しないTodoIDが存在する場合",
-			input: map[string]string{
-				"TodoID": "999",
+			input: map[string]any{
+				"TodoID": 999,
 			},
-			want: map[string]string{
+			want: map[string]any{
 				"TodoID": "Todoがありません",
 			},
 		},
 		{
 			name: "TodoTitleが空の場合",
-			input: map[string]string{
+			input: map[string]any{
 				"TodoTitle": "",
 			},
-			want: map[string]string{
+			want: map[string]any{
 				"TodoTitle": "Todo名がありません",
 			},
 		},
 		{
 			name: "無効なCategoryIDが存在する場合",
-			input: map[string]string{
+			input: map[string]any{
 				"CategoryID": "無効なID",
 			},
-			want: map[string]string{
+			want: map[string]any{
 				"CategoryID": "無効なCategoryIDです",
 			},
 		},
 		{
 			name: "存在しないCategoryIDが存在する場合",
-			input: map[string]string{
-				"CategoryID": "999",
+			input: map[string]any{
+				"CategoryID": 999,
 			},
-			want: map[string]string{
+			want: map[string]any{
 				"CategoryID": "カテゴリがありません",
-			},
-		},
-		{
-			name: "サポートされていないContent-Typeが存在する場合",
-			input: map[string]string{
-				"Content-Type": "unsupported/type",
-				"supportType":  "supported/type",
-			},
-			want: map[string]string{
-				"Content-Type": "サポートされていないメディアタイプです．",
-			},
-		},
-		{
-			name: "supportTypeが存在しない場合",
-			input: map[string]string{
-				"Content-Type": "supported/type",
-			},
-			want: map[string]string{
-				"supportType": "内部エラー",
 			},
 		},
 	}
@@ -171,7 +153,7 @@ func TestTodoID(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		id      int
+		id      uint
 		wantErr bool
 		errMsg  string
 	}{
@@ -187,12 +169,7 @@ func TestTodoID(t *testing.T) {
 			wantErr: true,
 			errMsg:  "Todoがありません",
 		},
-		{
-			name:    "不正な入力（負の値）",
-			id:      -1,
-			wantErr: true,
-			errMsg:  "Todoがありません",
-		},
+
 	}
 
 	for _, tt := range tests {
@@ -234,7 +211,7 @@ func TestCategoryID(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		id      int
+		id      uint
 		wantErr bool
 		errMsg  string
 	}{
@@ -250,12 +227,7 @@ func TestCategoryID(t *testing.T) {
 			wantErr: true,
 			errMsg:  "カテゴリがありません",
 		},
-		{
-			name:    "不正な入力（負の値）",
-			id:      -1,
-			wantErr: true,
-			errMsg:  "カテゴリがありません",
-		},
+
 	}
 
 	for _, tt := range tests {
@@ -327,6 +299,68 @@ func TestContentType(t *testing.T) {
 			// エラーメッセージをチェック
 			if tt.wantErr && err.Error() != tt.errMsg {
 				t.Errorf("ContentType() error message = %v, want %v", err.Error(), tt.errMsg)
+			}
+		})
+	}
+}
+
+func TestConv(t *testing.T) {
+	tests := []struct {
+		name  string
+		input map[string]error
+		want  map[string]any
+	}{
+		{
+			name:  "エラーがない場合",
+			input: map[string]error{},
+			want:  map[string]any{},
+		},
+		{
+			name: "単一のエラーがある場合",
+			input: map[string]error{
+				"TodoID": fmt.Errorf("無効なTodoIDです"),
+			},
+			want: map[string]any{
+				"TodoID": "無効なTodoIDです",
+			},
+		},
+		{
+			name: "複数のエラーがある場合",
+			input: map[string]error{
+				"TodoID":    fmt.Errorf("無効なTodoIDです"),
+				"TodoTitle": fmt.Errorf("Todo名がありません"),
+			},
+			want: map[string]any{
+				"TodoID":    "無効なTodoIDです",
+				"TodoTitle": "Todo名がありません",
+			},
+		},
+		{
+			name: "エラーメッセージが空の場合",
+			input: map[string]error{
+				"TodoID": fmt.Errorf(""),
+			},
+			want: map[string]any{
+				"TodoID": "",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := validation.Conv(tt.input)
+			if len(got) != len(tt.want) {
+				t.Errorf("期待するエラー数は %d でしたが、実際は %d でした", len(tt.want), len(got))
+			}
+			for key, expectedMsg := range tt.want {
+				actualMsg, exists := got[key]
+				if !exists {
+					t.Errorf("キー %s のエラーが返却されていません", key)
+					continue
+				}
+				if actualMsg != expectedMsg {
+					t.Errorf("キー %s のエラー: 期待値 %q、実際の値 %q", key, expectedMsg, actualMsg)
+				}
 			}
 		})
 	}

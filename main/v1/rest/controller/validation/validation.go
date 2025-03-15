@@ -2,7 +2,6 @@ package validation
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/gs223gs/go-webapi-todo/structs"
 	"gorm.io/gorm"
@@ -11,7 +10,7 @@ import (
 // ! package名がvalidationのため，関数名をわざと短くしている
 
 // .TODOIDがDBに存在するかチェック
-func TodoID(id int, db *gorm.DB) error {
+func TodoID(id uint, db *gorm.DB) error {
 	var todo structs.Todos
 	if err := db.First(&todo, int(id)).Error; err != nil {
 		return fmt.Errorf("Todoがありません")
@@ -19,7 +18,7 @@ func TodoID(id int, db *gorm.DB) error {
 	return nil
 }
 
-func CategoryID(id int, db *gorm.DB) error {
+func CategoryID(id uint, db *gorm.DB) error {
 	var categories structs.Categories
 	if err := db.First(&categories, id).Error; err != nil {
 		return fmt.Errorf("カテゴリがありません")
@@ -41,43 +40,50 @@ func TodoTitle(Title string) error {
 	return nil
 }
 
-func Check(s map[string]string, db *gorm.DB) (result map[string]error) {
+/*
+Key values ​​that can be used =>
+TodoID,
+TodoTitle,
+CategoryID
+*/
+func Check(m map[string]any, db *gorm.DB) (result map[string]error) {
 	result = make(map[string]error)
-	for k, v := range s {
+	for k, v := range m {
 		switch k {
 		case "TodoID":
-			if id, err := strconv.Atoi(v); err == nil {
-				fmt.Println(id)
+			if id, ok := v.(uint); ok {
 				if err := TodoID(id, db); err != nil {
 					result["TodoID"] = err
 				}
 			} else {
 				result["TodoID"] = fmt.Errorf("無効なTodoIDです")
 			}
-
 		case "TodoTitle":
-			if err := TodoTitle(v); err != nil {
-				result[k] = err
-			}
-		case "CategoryID":
-			if id, err := strconv.Atoi(v); err == nil {
-				fmt.Println(id)
-				if err := CategoryID(id, db); err != nil {
+			if str, ok := v.(string); ok {
+				if err := TodoTitle(str); err != nil {
 					result[k] = err
 				}
 			} else {
-				result[k] = fmt.Errorf("無効なCategoryIDです")
+				result[k] = fmt.Errorf("無効なTodo名です")
+
 			}
-		case "Content-Type":
-			supportType, exists := s["supportType"]
-			if !exists {
-				result["supportType"] = fmt.Errorf("内部エラー")
-				continue
-			}
-			if err := ContentType(v, supportType); err != nil {
-				result[k] = err
+		case "CategoryID":
+			if id, ok := v.(uint); ok {
+				if err := CategoryID(id, db); err != nil {
+					result["CategoryID"] = err
+				}
+			} else {
+				result["CategoryID"] = fmt.Errorf("無効なCategoryIDです")
 			}
 		}
 	}
-	return result
+	return
+}
+
+func Conv(prev map[string]error) (result map[string]any) {
+	result = make(map[string]any)
+	for k, v := range prev {
+		result[k] = v.Error()
+	}
+	return
 }
