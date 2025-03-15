@@ -12,7 +12,40 @@ import (
 )
 
 func TestCheck(t *testing.T) {
-	var db *gorm.DB = nil
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("データベースの作成に失敗しました: %v", err)
+	}
+
+	// テーブルの作成
+	if err := db.AutoMigrate(&structs.Todos{}, &structs.Categories{}); err != nil {
+		t.Fatalf("テーブルの作成に失敗しました: %v", err)
+	}
+	// テストデータの作成
+	categories := []structs.Categories{
+		{Id: 1, Category: "カテゴリ1"},
+		{Id: 2, Category: "カテゴリ2"},
+		{Id: 3, Category: "カテゴリ3"},
+	}
+
+	todos := []structs.Todos{
+		{Id: 1, Title: "Todo1", Content: "内容1", Category_Id: 1},
+		{Id: 2, Title: "Todo2", Content: "内容2", Category_Id: 2},
+		{Id: 3, Title: "Todo3", Content: "内容3", Category_Id: 3},
+	}
+
+	for _, category := range categories {
+		if err := db.Create(&category).Error; err != nil {
+			t.Fatalf("カテゴリの作成に失敗しました: %v", err)
+		}
+	}
+
+	for _, todo := range todos {
+		if err := db.Create(&todo).Error; err != nil {
+			t.Fatalf("Todoの作成に失敗しました: %v", err)
+		}
+	}
+
 
 	tests := []struct {
 		name  string
@@ -24,6 +57,7 @@ func TestCheck(t *testing.T) {
 			name: "TodoTitleが存在する場合（正常）",
 			input: map[string]string{
 				"TodoTitle": "有効なタイトル",
+				"TodoID":    "1",
 			},
 			want: map[string]string{}, // エラーなし
 		},
@@ -31,9 +65,48 @@ func TestCheck(t *testing.T) {
 			name: "TodoTitleが空の場合（エラー発生）",
 			input: map[string]string{
 				"TodoTitle": "",
+				"TodoID":    "1",
 			},
 			want: map[string]string{
 				"TodoTitle": "Todo名がありません",
+			},
+		},
+		{
+			name: "TodoIDが数字の場合（正常）",
+			input: map[string]string{
+				"TodoTitle": "有効なタイトル",
+				"TodoID":    "1",
+			},
+			want: map[string]string{}, // エラーなし
+		},
+		{
+			name: "TodoIDが数字以外の場合（エラー発生）",
+			input: map[string]string{
+				"TodoTitle": "有効なタイトル",
+				"TodoID":    "abc",
+			},
+			want: map[string]string{
+				"TodoID": "無効なTodoIDです",
+			},
+		},
+		{
+			name: "TodoIDが空の場合（エラー発生）",
+			input: map[string]string{
+				"TodoTitle": "有効なタイトル",
+				"TodoID":    "",
+			},
+			want: map[string]string{
+				"TodoID": "無効なTodoIDです",
+			},
+		},
+		{
+			name: "TodoIDが存在しない場合（エラー発生）",
+			input: map[string]string{
+				"TodoTitle": "有効なタイトル",
+				"TodoID":    "999",
+			},
+			want: map[string]string{
+				"TodoID": "Todoがありません",
 			},
 		},
 	}
@@ -182,6 +255,62 @@ func TestCategoryID(t *testing.T) {
 			// エラーメッセージをチェック
 			if tt.wantErr && err.Error() != tt.errMsg {
 				t.Errorf(" CategoryID() error message = %v, want %v", err.Error(), tt.errMsg)
+			}
+		})
+	}
+}
+
+func TestContentType(t *testing.T) {
+	tests := []struct {
+		name        string
+		contentType string
+		supportType string
+		wantErr     bool
+		errMsg      string
+	}{
+		{
+			name:        "サポートされているタイプ",
+			contentType: "application/json",
+			supportType: "application/json",
+			wantErr:     false,
+			errMsg:      "",
+		},
+		{
+			name:        "サポートされていないタイプ",
+			contentType: "application/xml",
+			supportType: "application/json",
+			wantErr:     true,
+			errMsg:      "サポートされていないメディアタイプです．",
+		},
+		{
+			name:        "空のContent-Type",
+			contentType: "",
+			supportType: "application/json",
+			wantErr:     true,
+			errMsg:      "サポートされていないメディアタイプです．",
+		},
+		{
+			name:        "大文字小文字の違い",
+			contentType: "APPLICATION/JSON",
+			supportType: "application/json",
+			wantErr:     true,
+			errMsg:      "サポートされていないメディアタイプです．",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validation.ContentType(tt.contentType, tt.supportType)
+
+			// エラーの有無をチェック
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ContentType() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			// エラーメッセージをチェック
+			if tt.wantErr && err.Error() != tt.errMsg {
+				t.Errorf("ContentType() error message = %v, want %v", err.Error(), tt.errMsg)
 			}
 		})
 	}
