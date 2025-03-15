@@ -46,12 +46,10 @@ func TestCheck(t *testing.T) {
 		}
 	}
 
-
 	tests := []struct {
 		name  string
 		input map[string]string
-		// 期待するエラーは、キーとエラーメッセージのマップとして定義
-		want map[string]string
+		want  map[string]string
 	}{
 		{
 			name: "TodoTitleが存在する場合（正常）",
@@ -59,60 +57,78 @@ func TestCheck(t *testing.T) {
 				"TodoTitle": "有効なタイトル",
 				"TodoID":    "1",
 			},
-			want: map[string]string{}, // エラーなし
+			want: map[string]string{},
 		},
 		{
-			name: "TodoTitleが空の場合（エラー発生）",
+			name: "無効なTodoIDが存在する場合",
+			input: map[string]string{
+				"TodoID": "無効なID",
+			},
+			want: map[string]string{
+				"TodoID": "無効なTodoIDです",
+			},
+		},
+		{
+			name: "存在しないTodoIDが存在する場合",
+			input: map[string]string{
+				"TodoID": "999",
+			},
+			want: map[string]string{
+				"TodoID": "Todoがありません",
+			},
+		},
+		{
+			name: "TodoTitleが空の場合",
 			input: map[string]string{
 				"TodoTitle": "",
-				"TodoID":    "1",
 			},
 			want: map[string]string{
 				"TodoTitle": "Todo名がありません",
 			},
 		},
 		{
-			name: "TodoIDが数字の場合（正常）",
+			name: "無効なCategoryIDが存在する場合",
 			input: map[string]string{
-				"TodoTitle": "有効なタイトル",
-				"TodoID":    "1",
-			},
-			want: map[string]string{}, // エラーなし
-		},
-		{
-			name: "TodoIDが数字以外の場合（エラー発生）",
-			input: map[string]string{
-				"TodoTitle": "有効なタイトル",
-				"TodoID":    "abc",
+				"CategoryID": "無効なID",
 			},
 			want: map[string]string{
-				"TodoID": "無効なTodoIDです",
+				"CategoryID": "無効なCategoryIDです",
 			},
 		},
 		{
-			name: "TodoIDが空の場合（エラー発生）",
+			name: "存在しないCategoryIDが存在する場合",
 			input: map[string]string{
-				"TodoTitle": "有効なタイトル",
-				"TodoID":    "",
+				"CategoryID": "999",
 			},
 			want: map[string]string{
-				"TodoID": "無効なTodoIDです",
+				"CategoryID": "カテゴリがありません",
 			},
 		},
 		{
-			name: "TodoIDが存在しない場合（エラー発生）",
+			name: "サポートされていないContent-Typeが存在する場合",
 			input: map[string]string{
-				"TodoTitle": "有効なタイトル",
-				"TodoID":    "999",
+				"Content-Type": "unsupported/type",
+				"supportType":  "supported/type",
 			},
 			want: map[string]string{
-				"TodoID": "Todoがありません",
+				"Content-Type": "サポートされていないメディアタイプです．",
+			},
+		},
+		{
+			name: "supportTypeが存在しない場合",
+			input: map[string]string{
+				"Content-Type": "supported/type",
+			},
+			want: map[string]string{
+				"supportType": "内部エラー",
 			},
 		},
 	}
 
 	for _, tt := range tests {
+		tt := tt // ループ変数のスコープを固定
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel() // テストを並行して実行
 			got := validation.Check(tt.input, db)
 			if len(got) != len(tt.want) {
 				t.Errorf("期待するエラー数は %d でしたが、実際は %d でした", len(tt.want), len(got))

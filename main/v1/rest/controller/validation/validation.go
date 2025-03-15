@@ -57,10 +57,26 @@ func Check(s map[string]string, db *gorm.DB) (result map[string]error) {
 
 		case "TodoTitle":
 			if err := TodoTitle(v); err != nil {
-				result["TodoTitle"] = err
+				result[k] = err
 			}
 		case "CategoryID":
+			if id, err := strconv.Atoi(v); err == nil {
+				fmt.Println(id)
+				if err := CategoryID(id, db); err != nil {
+					result[k] = err
+				}
+			} else {
+				result[k] = fmt.Errorf("無効なCategoryIDです")
+			}
 		case "Content-Type":
+			supportType, exists := s["supportType"]
+			if !exists {
+				result["supportType"] = fmt.Errorf("内部エラー")
+				continue
+			}
+			if err := ContentType(v, supportType); err != nil {
+				result[k] = err
+			}
 		}
 	}
 	return result
