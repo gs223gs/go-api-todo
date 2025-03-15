@@ -9,23 +9,26 @@ import (
 
 // ! package名がvalidationのため，関数名をわざと短くしている
 
-//.TODOIDがDBに存在するかチェック
-// 
+// .TODOIDがDBに存在するかチェック
 func TodoID(id int, db *gorm.DB) error {
 	var todo structs.Todos
 	if err := db.First(&todo, int(id)).Error; err != nil {
 		return fmt.Errorf("Todoがありません")
 	}
 	return nil
-
 }
 
-func CategoryID(db *gorm.DB, id int) {
-
+func CategoryID(id int, db *gorm.DB) error {
+	var categories structs.Categories
+	if err := db.First(&categories, id).Error; err != nil {
+		return fmt.Errorf("カテゴリがありません")
+	}
+	return nil
 }
 
-func ContentType() {
+func ContentType(contentType string) error {
 
+	return nil
 }
 
 func TodoTitle(Title string) error {
