@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gs223gs/go-webapi-todo/structs"
 	"github.com/gs223gs/go-webapi-todo/controller/validation"
+	"github.com/gs223gs/go-webapi-todo/structs"
 	"gorm.io/gorm"
 )
 
@@ -39,28 +39,18 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 
 	r.POST("/v1/rest/todo", func(c *gin.Context) {
 		var todo structs.Todos
-		var categories structs.Categories
 
-		if c.ContentType() != "application/json" {
-			c.JSON(http.StatusUnsupportedMediaType, gin.H{"error": "サポートされていないメディアタイプです"})
-			return
-		}
-		// JSONからデータをバインド
 		if err := c.ShouldBindJSON(&todo); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		if err := validation.TodoTitle(todo.Title); err!=nil {
-			c.JSON(http.StatusBadRequest, gin.H{"messege": err})
+
+	
+		var validate = map[string]any{"TodoTitle": todo.Title, "CategoryID": todo.Category_Id}
+		if err := validation.Check(validate, db); len(err) != 0 {
+			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
 			return
 		}
-
-		// Categoryの存在を確認
-		if err := db.First(&categories, todo.Category_Id).Error; err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "カテゴリが存在しません"})
-			return
-		}
-
 		db.Create(&todo)
 		c.JSON(http.StatusOK, gin.H{"messege": "追加完了"})
 	})
@@ -75,7 +65,7 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 		}
 
 		// 各種チェック Id, Todo名, カテゴリ,
-
+		//!--------------------------------------------------------------------------
 		var existingTodo structs.Todos
 		if err := db.First(&existingTodo, todo.Id).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Todoが存在しません"})
@@ -91,6 +81,7 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "カテゴリが存在しません"})
 			return
 		}
+		//!--------------------------------------------------------------------------
 
 		if err := db.Save(&todo).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新に失敗しました"})
@@ -110,10 +101,12 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
+		//!--------------------------------------------------------------------------
 		if err := db.First(&todo, todo.Id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Todoが存在しません"})
 			return
 		}
+		//!--------------------------------------------------------------------------
 
 		db.Delete(&todo)
 		c.JSON(http.StatusOK, gin.H{"messege": "消去完了"})
