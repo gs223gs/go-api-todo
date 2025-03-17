@@ -16,7 +16,8 @@ build-errors.log
 # 一時ファイル
 *.tmp
 *.temp
-
+tmp/
+temp/
 # IDE関連
 .vscode/
 .idea/
