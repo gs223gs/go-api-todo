@@ -40,6 +40,13 @@ func TodoTitle(Title string) error {
 	return nil
 }
 
+func CategoryTitle(Title string) error {
+	if Title == "" {
+		return fmt.Errorf("Category名がありません")
+	}
+	return nil
+}
+
 /*
 Key values ​​that can be used =>
 TodoID,
@@ -65,6 +72,15 @@ func Check(m map[string]any, db *gorm.DB) (result map[string]error) {
 				}
 			} else {
 				result[k] = fmt.Errorf("無効なTodo名です")
+
+			}
+		case "CategoryTitle":
+			if str, ok := v.(string); ok {
+				if err := CategoryTitle(str); err != nil {
+					result[k] = err
+				}
+			} else {
+				result[k] = fmt.Errorf("無効なCategory名です")
 
 			}
 		case "CategoryID":
