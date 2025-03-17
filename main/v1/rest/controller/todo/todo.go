@@ -45,43 +45,31 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
-	
 		var validate = map[string]any{"TodoTitle": todo.Title, "CategoryID": todo.Category_Id}
 		if err := validation.Check(validate, db); len(err) != 0 {
 			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
 			return
 		}
-		db.Create(&todo)
+
+		if err := db.Create(&todo).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "登録に失敗しました"})
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{"messege": "追加完了"})
 	})
 
 	r.PUT("/v1/rest/todo", func(c *gin.Context) {
 		var todo structs.Todos
-		var categories structs.Categories
-
 		if err := c.ShouldBindJSON(&todo); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// 各種チェック Id, Todo名, カテゴリ,
-		//!--------------------------------------------------------------------------
-		var existingTodo structs.Todos
-		if err := db.First(&existingTodo, todo.Id).Error; err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Todoが存在しません"})
+		var validate = map[string]any{"TodoID": todo.Id, "TodoTitle": todo.Title, "CategoryID": todo.Category_Id}
+		if err := validation.Check(validate, db); len(err) != 0 {
+			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
 			return
 		}
-
-		if todo.Title == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"messege": "Todo名がありません"})
-			return
-		}
-
-		if err := db.First(&categories, todo.Category_Id).Error; err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "カテゴリが存在しません"})
-			return
-		}
-		//!--------------------------------------------------------------------------
 
 		if err := db.Save(&todo).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新に失敗しました"})
@@ -101,14 +89,17 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
-		//!--------------------------------------------------------------------------
-		if err := db.First(&todo, todo.Id).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Todoが存在しません"})
+		var validate = map[string]any{"TodoID": todo.Id}
+		if err := validation.Check(validate, db); len(err) != 0 {
+			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
 			return
 		}
-		//!--------------------------------------------------------------------------
 
-		db.Delete(&todo)
+		if err := db.Delete(&todo).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "削除に失敗しました"})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{"messege": "消去完了"})
 	})
 }

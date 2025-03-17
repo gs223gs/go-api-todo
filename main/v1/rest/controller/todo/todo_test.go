@@ -105,7 +105,7 @@ func TestPutTodo(t *testing.T) {
 			name:         "存在しないCategory_Id",
 			todoJSON:     `{"Id":1,"Title": "Updated Todo", "Content": "Updated Content", "Category_Id": 999, "Is_Done": true}`,
 			expectedCode: http.StatusBadRequest,
-			expectedBody: "カテゴリが存在しません",
+			expectedBody: "カテゴリがありません",
 		},
 		{
 			name:         "Titleがない場合",
@@ -167,8 +167,8 @@ func TestDeleteTodo(t *testing.T) {
 		{
 			name:         "存在しないTodoの削除",
 			todoJSON:     `{"Id":999}`,
-			expectedCode: http.StatusNotFound,
-			expectedBody: "Todoが存在しません",
+			expectedCode: http.StatusBadRequest,
+			expectedBody: "Todoがありません",
 		},
 	}
 
