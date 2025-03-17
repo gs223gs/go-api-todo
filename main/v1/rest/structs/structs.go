@@ -28,4 +28,5 @@ type TodosResponse struct {
 	Is_Done     bool
 	Due         string
 	Created_at  string
+	Update_at   string
 }
