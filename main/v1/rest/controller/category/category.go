@@ -1,10 +1,10 @@
 package category
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gs223gs/go-webapi-todo/controller/validation"
 	"github.com/gs223gs/go-webapi-todo/structs"
 	"gorm.io/gorm"
 )
@@ -18,13 +18,25 @@ func V1RestCategory(r *gin.Engine, db *gorm.DB) {
 	})
 
 	r.POST("/v1/rest/category", func(c *gin.Context) {
-		var Category structs.Categories
-		if err := c.ShouldBindJSON(&Category); err != nil {
+		var categories structs.Categories
+
+		if err := c.ShouldBindJSON(&categories); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		db.Create(&Category)
-		c.JSON(http.StatusOK, Category)
+
+		var validate = map[string]any{"CategoryTitle": categories.Category}
+		if err := validation.Check(validate, db); len(err) != 0 {
+			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
+			return
+		}
+
+		
+		if err := db.Create(&categories).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "登録に失敗しました"})
+			return
+		}
+		c.JSON(http.StatusOK, categories)
 	})
 
 	r.PUT("/v1/rest/category", func(c *gin.Context) {
@@ -35,18 +47,32 @@ func V1RestCategory(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
-		if err := db.First(&categories, categories.Id).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "カテゴリが存在しません"})
+		var validate = map[string]any{"CategoryID": categories.Id, "CategoryTitle": categories.Category}
+		if err := validation.Check(validate, db); len(err) != 0 {
+			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
 			return
 		}
-		fmt.Printf("%T %v----------------------------------------", categories, categories)
-		db.Save(&categories)
+
+		if err := db.Save(&categories).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "登録に失敗しました"})
+			return
+		}
+
 		c.JSON(http.StatusOK, categories)
 	})
 
 	r.DELETE("/v1/rest/category", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "hi DELETE postman!",
-		})
+		var categories structs.Categories
+
+		var validate = map[string]any{"CategoryID": categories.Id}
+		if err := validation.Check(validate, db); len(err) != 0 {
+			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
+			return
+		}
+
+		if err := db.Delete(&categories).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "削除に失敗しました"})
+			return
+		}
 	})
 }
