@@ -31,6 +31,7 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 					return ""
 				}(),
 				Created_at: todo.Created_at.Format(time.RFC3339),
+				Updated_at: todo.Updated_at.Format(time.RFC3339),
 			})
 		}
 
@@ -58,6 +59,7 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 		c.JSON(http.StatusOK, gin.H{"messege": "追加完了"})
 	})
 
+	//REST原則に基づいて PUTを実装し直す
 	r.PUT("/v1/rest/todo", func(c *gin.Context) {
 		var todo structs.Todos
 		if err := c.ShouldBindJSON(&todo); err != nil {
@@ -71,13 +73,26 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
-		if err := db.Save(&todo).Error; err != nil {
+		var existingTodo structs.Todos
+		if err := db.First(&existingTodo, todo.Id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Todoが見つかりません"})
+			return
+		}
+
+		timenow := time.Now()
+
+		existingTodo.Title = todo.Title
+		existingTodo.Content = todo.Content
+		existingTodo.Category_Id = todo.Category_Id
+		existingTodo.Is_Done = todo.Is_Done
+		existingTodo.Due = todo.Due
+		existingTodo.Updated_at = timenow
+
+		if err := db.Save(&existingTodo).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新に失敗しました"})
 			return
 		}
 
-		//! Update_at の更新
-		//! Dueの処理を追加
 		c.JSON(http.StatusOK, gin.H{"messege": "更新完了"})
 	})
 
