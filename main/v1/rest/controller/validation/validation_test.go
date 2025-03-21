@@ -7,8 +7,8 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/gs223gs/go-webapi-todo/controller/validation"
-	"github.com/gs223gs/go-webapi-todo/structs"
+	"github.com/gs223gs/go-api-todo/controller/validation"
+	"github.com/gs223gs/go-api-todo/structs"
 	_ "github.com/mattn/go-sqlite3"
 )
 

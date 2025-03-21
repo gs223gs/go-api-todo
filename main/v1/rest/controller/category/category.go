@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gs223gs/go-webapi-todo/controller/validation"
-	"github.com/gs223gs/go-webapi-todo/structs"
+	"github.com/gs223gs/go-api-todo/controller/validation"
+	"github.com/gs223gs/go-api-todo/structs"
 	"gorm.io/gorm"
 )
 

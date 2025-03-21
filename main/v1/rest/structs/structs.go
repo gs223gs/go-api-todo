@@ -8,9 +8,9 @@ type Todos struct {
 	Content     string     `gorm:"text"`
 	Category_Id uint       `gorm:"size:100;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:Category_Id;references:Id"` //CategoriesのidでforeingKey
 	Is_Done     bool       `gorm:"default:false"`
-	Due         *time.Time `gorm:"default:NULL"` //ポインタ使用でNULL許容しています．
+	Due         *time.Time `gorm:"default:NULL"`
 	Created_at  time.Time  `gorm:"default:CURRENT_TIMESTAMP"`
-	Update_at   time.Time  `gorm:"default:CURRENT_TIMESTAMP"`
+	Updated_at  time.Time  `gorm:"default:CURRENT_TIMESTAMP"`
 	Category    Categories `gorm:"foreignKey:Category_Id;references:Id"`
 }
 
@@ -28,5 +28,5 @@ type TodosResponse struct {
 	Is_Done     bool
 	Due         string
 	Created_at  string
-	Update_at   string
+	Updated_at  string
 }

@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gs223gs/go-webapi-todo/controller/todo"
-	"github.com/gs223gs/go-webapi-todo/structs"
+	"github.com/gs223gs/go-api-todo/controller/todo"
+	"github.com/gs223gs/go-api-todo/structs"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/gs223gs/go-webapi-todo/structs"
+	"github.com/gs223gs/go-api-todo/structs"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

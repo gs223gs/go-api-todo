@@ -3,7 +3,7 @@ package validation
 import (
 	"fmt"
 
-	"github.com/gs223gs/go-webapi-todo/structs"
+	"github.com/gs223gs/go-api-todo/structs"
 	"gorm.io/gorm"
 )
 

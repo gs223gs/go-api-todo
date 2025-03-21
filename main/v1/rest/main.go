@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gs223gs/go-webapi-todo/controller/category"
-	"github.com/gs223gs/go-webapi-todo/controller/todo"
-	"github.com/gs223gs/go-webapi-todo/db"
+	"github.com/gs223gs/go-api-todo/controller/category"
+	"github.com/gs223gs/go-api-todo/controller/todo"
+	"github.com/gs223gs/go-api-todo/db"
 )
 
 func main() {
