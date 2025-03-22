@@ -4,7 +4,7 @@
 
 最初のアウトプットでTodoサイトを開発するのはよくある話です。バックエンドなしでもできますが、あった方が学びになります。しかし、その度にバックエンドを用意するのは面倒ですよね。管理も面倒です。それをこのリポジトリで解決します。
 
-> **⚠️ 注意:** まだ開発途中で使用することはできません。もうしばらくお待ちください。
+> **⚠️ 注意:** v1/rest は使用可能となりました．
 
 ## 🚀 環境構築
 
@@ -15,7 +15,7 @@
 
 2. **ディレクトリに移動**
    ```bash
-   cd go-webapi-todo
+   cd go-api-todo
    ```
 
 3. **コンテナを起動**
@@ -26,24 +26,34 @@
 
 4. **`go.mod`を作成**
    ```bash
-   go mod init github.com/gs223gs/go-webapi-todo
+   cd 使いたいAPIに移動 => 例: v1/rest
+   go mod init github.com/gs223gs/go-api-todo
+   go mod tidy
    ```
 
 5. **APIを起動**
    ```bash
-   cd 使いたいAPIに移動 例 => v1/rest
-   air
+   go run main.go
    ```
 
 6. **お好きなAPIにアクセス**
    - JSONでやりとりします。
 
+## 余談
+VScodeの拡張機能を使用して開発コンテナ内に入って作業していました
+もし，goが使用できない場合そちらで解決するかもしれません．
 ## 🔮 今後実装する機能
 
-- ユーザー認証 OAuth
-- ログ
+- OAuth
+- JWT
+- Open ID connection
+- ログ出力
 - RESTful API
+- GraphQL
 - gRPC
+- 並行処理を用いたもの
+   - Todo登録のたびにメール送信?
+   - 外部APIを呼び出す何かしらの機能？
 
 ---
 
