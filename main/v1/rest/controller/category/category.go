@@ -31,7 +31,6 @@ func V1RestCategory(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
-		
 		if err := db.Create(&categories).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "登録に失敗しました"})
 			return
@@ -63,6 +62,11 @@ func V1RestCategory(r *gin.Engine, db *gorm.DB) {
 
 	r.DELETE("/v1/rest/category", func(c *gin.Context) {
 		var categories structs.Categories
+
+		if err := c.ShouldBindJSON(&categories); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
 		var validate = map[string]any{"CategoryID": categories.Id}
 		if err := validation.Check(validate, db); len(err) != 0 {
