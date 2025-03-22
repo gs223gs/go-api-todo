@@ -1,65 +1,155 @@
-# v1 rest non Auth
-認証がないバージョンです．
-Todoの内容をそのままJSONで送ることで機能します．
+# Todo API仕様書
 
-## REST/Todo
-### GET v1/rest/todo
-機能:Todoを検索
+## ベースURL
+`/v1/rest`
 
-レスポンス
+## エンドポイント
+
+### Todoリソース
+
+#### 1. Todo一覧取得
+**エンドポイント**: `GET /todo`
+
+**レスポンス**:
+```json
+[
+  {
+    "Id": 1,
+    "Title": "タスク名",
+    "Content": "タスク内容",
+    "Category_id": 1,
+    "Is_Done": false,
+    "Due": "2024-03-21T13:36:25Z",  // null の場合は空文字
+    "Created_at": "2024-03-21T13:36:25Z",
+    "Updated_at": "2024-03-21T13:36:25Z"
+  }
+]
+```
+
+#### 2. Todo作成
+**エンドポイント**: `POST /todo`
+
+**リクエストボディ**:
 ```json
 {
-    "Id": int,
-    "Title": string,
-    "Content": string,
-    "Category_id": int,
-    "Is_Done": bool,
-    "Due": string("") || time (UTC),
-    "Created_at": time (UTC)
+  "Title": "タスク名",
+  "Content": "タスク内容",
+  "Category_Id": 1,
+  "Is_Done": false,
+  "Due": "2024-03-21T13:36:25Z"  // オプション
 }
 ```
 
-### POST v1/rest/todo
-機能:Todoの登録
-期待するJSON
-```JSON
+**レスポンス**:
+```json
 {
-  "Title": string,
-  "Content": string,
-  "category_id": bigint
+  "messege": "追加完了"
 }
 ```
 
-レスポンス
-```JSON
+#### 3. Todo更新
+**エンドポイント**: `PUT /todo`
+
+**リクエストボディ**:
+```json
 {
-    "Id": bigint,
-    "Title": string,
-    "Content": string,
-    "Category": string,
-    "Is_Done": bool,
-    "Created_at": time (ISO 8601 UTC時間),
-    "Update_at": time (ISO 8601 UTC時間)
+  "Id": 1,
+  "Title": "更新後のタスク名",
+  "Content": "更新後のタスク内容",
+  "Category_Id": 1,
+  "Is_Done": true,
+  "Due": "2024-03-21T13:36:25Z"  // オプション
 }
 ```
 
+**レスポンス**:
+```json
+{
+  "message": "更新完了"
+}
+```
 
+#### 4. Todo削除
+**エンドポイント**: `DELETE /todo`
 
-Contentについて:
-  - todoの詳細な説明 null 可能
+**リクエストボディ**:
+```json
+{
+  "Id": 1
+}
+```
 
-Category_idについて:
-- category tableに
-### PUT v1/rest/todo
-機能:
-### DELETE v1/rest/todo
-機能:
+**レスポンス**:
+```json
+{
+  "messege": "消去完了"
+}
+```
 
-## REST/Category
-### GET v1/rest/category
-機能:
-### POST v1/rest/category
-機能:
-### PUT v1/rest/category
-機能:
-### DELETE v1/rest/category
+### カテゴリーリソース
+
+#### 1. カテゴリー一覧取得
+**エンドポイント**: `GET /category`
+
+**レスポンス**:
+```json
+[
+  {
+    "Id": 1,
+    "Category": "カテゴリー名"
+  }
+]
+```
+
+#### 2. カテゴリー作成
+**エンドポイント**: `POST /category`
+
+**リクエストボディ**:
+```json
+{
+  "Category": "カテゴリー名"
+}
+```
+
+**レスポンス**: 作成されたカテゴリー情報
+
+#### 3. カテゴリー更新
+**エンドポイント**: `PUT /category`
+
+**リクエストボディ**:
+```json
+{
+  "Id": 1,
+  "Category": "更新後のカテゴリー名"
+}
+```
+
+**レスポンス**: 更新されたカテゴリー情報
+
+#### 4. カテゴリー削除
+**エンドポイント**: `DELETE /category`
+
+**リクエストボディ**:
+```json
+{
+  "Id": 1
+}
+```
+
+## エラーレスポンス
+```json
+{
+  "error": "エラーメッセージ"
+}
+```
+
+## バリデーション
+- Todo名は必須
+- カテゴリー名は必須
+- カテゴリーIDは存在するものを指定
+- TodoIDは存在するものを指定
+
+## 注意事項
+- カテゴリーを削除すると、関連するTodoも削除されます（カスケード削除）
+- 日時はISO 8601形式で扱います
+- すべてのエンドポイントは JSON 形式でデータをやり取りします
