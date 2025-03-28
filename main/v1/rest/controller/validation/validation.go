@@ -26,12 +26,7 @@ func CategoryID(id uint, db *gorm.DB) error {
 	return nil
 }
 
-func ContentType(contentType, supportType string) error {
-	if contentType != supportType {
-		return fmt.Errorf("サポートされていないメディアタイプです．")
-	}
-	return nil
-}
+
 
 func TodoTitle(Title string) error {
 	if Title == "" {
