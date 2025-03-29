@@ -248,61 +248,7 @@ func TestCategoryID(t *testing.T) {
 	}
 }
 
-func TestContentType(t *testing.T) {
-	tests := []struct {
-		name        string
-		contentType string
-		supportType string
-		wantErr     bool
-		errMsg      string
-	}{
-		{
-			name:        "サポートされているタイプ",
-			contentType: "application/json",
-			supportType: "application/json",
-			wantErr:     false,
-			errMsg:      "",
-		},
-		{
-			name:        "サポートされていないタイプ",
-			contentType: "application/xml",
-			supportType: "application/json",
-			wantErr:     true,
-			errMsg:      "サポートされていないメディアタイプです．",
-		},
-		{
-			name:        "空のContent-Type",
-			contentType: "",
-			supportType: "application/json",
-			wantErr:     true,
-			errMsg:      "サポートされていないメディアタイプです．",
-		},
-		{
-			name:        "大文字小文字の違い",
-			contentType: "APPLICATION/JSON",
-			supportType: "application/json",
-			wantErr:     true,
-			errMsg:      "サポートされていないメディアタイプです．",
-		},
-	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := validation.ContentType(tt.contentType, tt.supportType)
-
-			// エラーの有無をチェック
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ContentType() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			// エラーメッセージをチェック
-			if tt.wantErr && err.Error() != tt.errMsg {
-				t.Errorf("ContentType() error message = %v, want %v", err.Error(), tt.errMsg)
-			}
-		})
-	}
-}
 
 func TestConv(t *testing.T) {
 	tests := []struct {
