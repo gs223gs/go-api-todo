@@ -1,6 +1,7 @@
 package todo
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -59,7 +60,7 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 		c.JSON(http.StatusOK, gin.H{"messege": "追加完了"})
 	})
 
-	//REST原則に基づいて PUTを実装し直す
+	////REST原則に基づいて PUTを実装し直す
 	r.PUT("/v1/rest/todo", func(c *gin.Context) {
 		var updateTodo structs.Todos
 		if err := c.ShouldBindJSON(&updateTodo); err != nil {
@@ -73,20 +74,22 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
-		// 既存のレコードを取得
-		var existingTodo structs.Todos
-		if err := db.First(&existingTodo, updateTodo.Id).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "指定されたTodoが見つかりません"})
-			return
-		}
+		fmt.Println(updateTodo)
 
-		// 更新したいフィールドのみを更新
+		/*
+			既存Todoの取得
+			これにしないとupdated_at等が更新できない
+			理由:PUTは明示的に全てのカラムを送らなければいけない？
+			部分的な更新はPATCHで行う？
+		*/
+		var existingTodo structs.Todos
+
 		existingTodo.Title = updateTodo.Title
 		existingTodo.Content = updateTodo.Content
 		existingTodo.Category_Id = updateTodo.Category_Id
 		existingTodo.Is_Done = updateTodo.Is_Done
 		existingTodo.Due = updateTodo.Due
-		existingTodo.Updated_at = time.Now() // 更新時刻を設定
+		existingTodo.Updated_at = time.Now()
 
 		if err := db.Save(&existingTodo).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新に失敗しました"})
@@ -104,9 +107,8 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
-		var validate = map[string]any{"TodoID": todo.Id}
-		if err := validation.Check(validate, db); len(err) != 0 {
-			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
+		if err := todo.CheckID(db); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
