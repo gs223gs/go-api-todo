@@ -33,6 +33,26 @@ func (t Todos) CheckID(db *gorm.DB) error {
 	return nil
 }
 
+func (t Todos) CheckTitle() error {
+	if t.Title == "" {
+		return fmt.Errorf("Titleがありません")
+	}
+	if len(t.Title) > 255 {
+		return fmt.Errorf("Titleが長すぎます")
+	}
+	return nil
+}
+
+func (t Todos) CheckCategoryId(db *gorm.DB) error {
+	var categories Categories
+	if err := db.First(&categories, t.Category_Id).Error; err != nil {
+		return fmt.Errorf("カテゴリが存在しません")
+	}
+	return nil
+}
+
+
+
 type Categories struct {
 	Id       uint   `gorm:"primary_key;autoIncrement"`
 	Category string `gorm:"size:255"`
@@ -74,6 +94,35 @@ test項目 {
 	}
 }
 
+
+
+methodについて
+CheckID
+CheckTitle
+CheckCategoryId
+CheckIsDone 必要なし
+CheckDue　必要なし
+
+
+使い方
+var todo Todos
+db gorm
+if err ....(JSON バインド)
+
+var errorMessege = map[string]string
+
+[idをチェックする場合]
+if err := todo.CheckId(db); err != nil {
+	errorMessege[todoID] = err.Error()
+}
+
+[error の時の response]
+if errorMessege != nil {
+gin.H(errorMessege)
+}
+
+
+
 設計について
 エラー時にJSONでレスポンスする
 
@@ -89,31 +138,4 @@ test項目 {
 		}
 	]
 }
-
-methodについて
-CheckID
-CheckTitle
-CheckCategoryId
-CheckIsDone
-CheckDue
-
-
-使い方
-var todo Todos
-
-if err ....(JSON バインド)
-
-var errorMessege = map[string]string
-
-[idをチェックする場合]
-if err := todo.CheckId(); err != nil {
-	errorMessege[todoID] = err.Error()
-}
-
-[error の時の response]
-if errorMessege != nil {
-gin.H(errorMessege)
-}
-
-
 */
