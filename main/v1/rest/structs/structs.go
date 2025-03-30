@@ -34,10 +34,11 @@ func (t Todos) CheckID(db *gorm.DB) error {
 }
 
 func (t Todos) CheckTitle() error {
+	maxTitleLength := 255
 	if t.Title == "" {
 		return fmt.Errorf("Titleがありません")
 	}
-	if len(t.Title) > 255 {
+	if len(t.Title) > maxTitleLength {
 		return fmt.Errorf("Titleが長すぎます")
 	}
 	return nil
@@ -50,8 +51,6 @@ func (t Todos) CheckCategoryId(db *gorm.DB) error {
 	}
 	return nil
 }
-
-
 
 type Categories struct {
 	Id       uint   `gorm:"primary_key;autoIncrement"`
