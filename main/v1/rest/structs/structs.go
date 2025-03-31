@@ -19,14 +19,15 @@ type Todos struct {
 	Category    Categories `gorm:"foreignKey:Category_Id;references:Id;constraint:OnDelete:CASCADE"`
 }
 
-//validation check
+/*
+	validation checkロジック
+	request => BindJSON => todo.メソッド() の順でこのメソッドに辿り着く
+	BindJSONで型チェックが行われるため，型自体のチェックは必要がない.
+	IDの存在確認やstrngのlengthチェックを行う
+*/
 
 func (t Todos) CheckID(db *gorm.DB) error {
-	/*
-		validation checkロジック
-		request => BindJSON => todo.CheckID(db) の順でこのメソッドに辿り着く
-		stringや-1や0はBindJSONの時点で弾かれるため必要がない
-	*/
+
 	if err := db.First(&t, t.Id).Error; err != nil {
 		return fmt.Errorf("Todoがありません")
 	}
