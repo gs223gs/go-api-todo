@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gs223gs/go-api-todo/controller/validation"
 	"github.com/gs223gs/go-api-todo/structs"
 	"gorm.io/gorm"
 )
@@ -41,15 +40,27 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 
 	r.POST("/v1/rest/todo", func(c *gin.Context) {
 		var todo structs.Todos
+		validate := make(map[string]string)
 
 		if err := c.ShouldBindJSON(&todo); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		var validate = map[string]any{"TodoTitle": todo.Title, "CategoryID": todo.Category_Id}
-		if err := validation.Check(validate, db); len(err) != 0 {
-			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
+		if err := todo.CheckID(db); err != nil {
+			validate["TodoID"] = err.Error()
+		}
+
+		if err := todo.CheckTitle(); err != nil {
+			validate["TodoTitle"] = err.Error()
+		}
+
+		if err := todo.CheckCategoryId(db); err != nil {
+			validate["CategoryID"] = err.Error()
+		}
+
+		if len(validate) > 0 {
+			c.JSON(http.StatusNotFound, gin.H{"errors": validate})
 			return
 		}
 
@@ -68,13 +79,25 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
-		var validate = map[string]any{"TodoID": updateTodo.Id, "TodoTitle": updateTodo.Title, "CategoryID": updateTodo.Category_Id}
-		if err := validation.Check(validate, db); len(err) != 0 {
-			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
-			return
+		validate := make(map[string]string)
+
+		if err := updateTodo.CheckID(db); err != nil {
+			validate["TodoID"] = err.Error()
 		}
 
-		fmt.Println(updateTodo)
+		if err := updateTodo.CheckTitle(); err != nil {
+			validate["TodoTitle"] = err.Error()
+		}
+
+		if err := updateTodo.CheckCategoryId(db); err != nil {
+			validate["CategoryID"] = err.Error()
+		}
+
+		if len(validate) > 0 {
+			c.JSON(http.StatusNotFound, gin.H{"errors": validate})
+			return
+		}
+		fmt.Println(validate)
 
 		/*
 			既存Todoの取得
@@ -83,6 +106,10 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			部分的な更新はPATCHで行う？
 		*/
 		var existingTodo structs.Todos
+		if err := db.First(&existingTodo, updateTodo.Id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Todoが見つかりません"})
+			return
+		}
 
 		existingTodo.Title = updateTodo.Title
 		existingTodo.Content = updateTodo.Content
