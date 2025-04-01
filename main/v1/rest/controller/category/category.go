@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gs223gs/go-api-todo/controller/validation"
 	"github.com/gs223gs/go-api-todo/structs"
 	"gorm.io/gorm"
 )
@@ -19,15 +18,19 @@ func V1RestCategory(r *gin.Engine, db *gorm.DB) {
 
 	r.POST("/v1/rest/category", func(c *gin.Context) {
 		var categories structs.Categories
+		validate := make(map[string]string)
 
 		if err := c.ShouldBindJSON(&categories); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		var validate = map[string]any{"CategoryTitle": categories.Category}
-		if err := validation.Check(validate, db); len(err) != 0 {
-			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
+		if err := categories.CheckTitle(); err != nil {
+			validate["categoryTitle"] = err.Error()
+		}
+
+		if len(validate) > 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"errors": validate})
 			return
 		}
 
@@ -40,15 +43,22 @@ func V1RestCategory(r *gin.Engine, db *gorm.DB) {
 
 	r.PUT("/v1/rest/category", func(c *gin.Context) {
 		var categories structs.Categories
-
+		validate := make(map[string]string)
 		if err := c.ShouldBindJSON(&categories); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		var validate = map[string]any{"CategoryID": categories.Id, "CategoryTitle": categories.Category}
-		if err := validation.Check(validate, db); len(err) != 0 {
-			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
+		if err := categories.CheckID(db); err != nil {
+			validate["CategoryID"] = err.Error()
+		}
+
+		if err := categories.CheckTitle(); err != nil {
+			validate["CategoryTitle"] = err.Error()
+		}
+
+		if len(validate) > 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"errors": validate})
 			return
 		}
 
@@ -62,15 +72,18 @@ func V1RestCategory(r *gin.Engine, db *gorm.DB) {
 
 	r.DELETE("/v1/rest/category", func(c *gin.Context) {
 		var categories structs.Categories
-
+		validate := make(map[string]string)
 		if err := c.ShouldBindJSON(&categories); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		var validate = map[string]any{"CategoryID": categories.Id}
-		if err := validation.Check(validate, db); len(err) != 0 {
-			c.JSON(http.StatusBadRequest, gin.H(validation.Conv(err)))
+		if err := categories.CheckID(db); err != nil {
+			validate["CategoryID"] = err.Error()
+		}
+
+		if len(validate) > 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"errors": validate})
 			return
 		}
 
