@@ -47,10 +47,6 @@ func V1RestTodo(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
-		if err := todo.CheckID(db); err != nil {
-			validate["TodoID"] = err.Error()
-		}
-
 		if err := todo.CheckTitle(); err != nil {
 			validate["TodoTitle"] = err.Error()
 		}

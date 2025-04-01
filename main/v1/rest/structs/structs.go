@@ -58,6 +58,25 @@ type Categories struct {
 	Category string `gorm:"size:255"`
 }
 
+func (c Categories) CheckID(db *gorm.DB) error {
+
+	if err := db.First(&c, c.Id).Error; err != nil {
+		return fmt.Errorf("Todoがありません")
+	}
+	return nil
+}
+
+func (c Categories) CheckTitle() error {
+	maxTitleLength := 255
+	if c.Category == "" {
+		return fmt.Errorf("Titleがありません")
+	}
+	if len(c.Category) > maxTitleLength {
+		return fmt.Errorf("Titleが長すぎます")
+	}
+	return nil
+}
+
 // get responseのため
 type TodosResponse struct {
 	Id          uint
