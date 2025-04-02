@@ -11,7 +11,17 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./main:/app
+      - ./backend:/app
+    tty: true
+
+  react:
+    build: ./react
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./frontend:/usr/src/app
+    ports:
+      - '3000:3000'
     tty: true
 
 volumes:

@@ -1,0 +1,14 @@
+{
+  "name": "Go & PostgreSQL Dev Container",
+  "dockerComposeFile": "../docker-compose.yaml",
+  "service": "go",
+  "workspaceFolder": "/app",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "go.goroot": "/usr/local/go-project"
+  },
+  "extensions": [
+    "golang.go"
+  ],
+  "remoteUser": "root"
+}

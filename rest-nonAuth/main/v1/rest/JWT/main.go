@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func main() {
 	// JWTに付与するクレームを定義
 	claims := jwt.MapClaims{
-		"user_id": "user_id123", // ユーザーIDをクレームに追加
+		"user_id": "user_id123",                          // ユーザーIDをクレームに追加
 		"exp":     time.Now().Add(time.Hour * 72).Unix(), // トークンの有効期限を72時間後に設定
 	}
 
@@ -38,7 +38,7 @@ func main() {
 	// トークンのクレームを取得し、トークンが有効か確認
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		fmt.Printf("user_id: %v\n", string(claims["user_id"].(string))) // クレームからユーザーIDを取得し出力
-		fmt.Printf("exp: %v\n", int64(claims["exp"].(float64))) // クレームから有効期限を取得し出力
+		fmt.Printf("exp: %v\n", int64(claims["exp"].(float64)))         // クレームから有効期限を取得し出力
 	} else {
 		fmt.Println(err) // トークンが無効な場合のエラーメッセージを出力
 	}
