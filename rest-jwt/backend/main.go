@@ -13,9 +13,27 @@ type TodoResponse struct {
 	Completed bool `json:"completed"`
 }
 
+
+type ErrResponse struct {
+	Message map[string]any `json:"message"`
+}
+
+type TodoMethod interface {
+	CheckTitle() error
+}
+
+
+
 //request
 type TodoCreateRequest struct {
 	Title string `json:"title"`
+}
+
+func (t TodoCreateRequest) CheckTitle() error {
+	if t.Title == "" || len(t.Title) > 255 {
+		return fmt.Errorf("Todo Titleがないか、255文字以上です")
+	}
+	return nil
 }
 
 type TodoUpdateRequest struct {
@@ -32,7 +50,11 @@ type TodoTable struct {
 }
 
 func main() {
-	
+	var CreateRequest TodoMethod = &TodoCreateRequest{"test"}
+	if err := CreateRequest.CheckTitle(); err != nil {
+		fmt.Println(err)
+	}
+
 }
 /*
 Todo
