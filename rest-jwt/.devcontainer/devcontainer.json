@@ -1,5 +1,5 @@
 {
-  "name": "Go & PostgreSQL Dev Container",
+  "name": "REST-JWT-GO",
   "dockerComposeFile": "../docker-compose.yaml",
   "service": "go",
   "workspaceFolder": "/app",
