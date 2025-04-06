@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+// ? Todo関係
+// !---------------------------------------------------------------------------------
 // response
 type Todos struct {
 	Todo []TodoResponse `json:"todos"`
@@ -12,17 +14,7 @@ type Todos struct {
 type TodoResponse struct {
 	ID        int    `json:"id"`
 	Title     string `json:"title"`
-	Completed bool   `json:"completed"`
-}
-
-// error response
-type ErrResponse struct {
-	Error []ErrorMessage `json:"errors"`
-}
-
-type ErrorMessage struct {
-	Tittle string `json:"tittle"`
-	Detail string `json:"detail"`
+	IsDone    bool   `json:"isDone"`
 }
 
 type TodoMethod interface {
@@ -35,23 +27,17 @@ type TodoCreateRequest struct {
 }
 
 func (t TodoCreateRequest) CheckTitle() error {
-	if t.Title == "" || len(t.Title) > 255 {
-		return fmt.Errorf("Todo Titleがないか、255文字以上です")
-	}
-	return nil
+	return validateString(t.Title, "TodoTitle")
 }
 
 type TodoUpdateRequest struct {
 	Id        int    `json:"id"`
 	Title     string `json:"title"`
-	Completed bool   `json:"completed"`
+	IsDone    bool   `json:"isDone"`
 }
 
 func (t TodoUpdateRequest) CheckTitle() error {
-	if t.Title == "" || len(t.Title) > 255 {
-		return fmt.Errorf("Todo Titleがないか、255文字以上です")
-	}
-	return nil
+	return validateString(t.Title, "TodoTitle")
 }
 
 func (t TodoUpdateRequest) CheckId() error {
@@ -65,8 +51,60 @@ func (t TodoUpdateRequest) CheckId() error {
 type TodoTable struct {
 	ID        int    `gorm:"primary_key;auto_increment"`
 	Title     string `gorm:"size:255"`
-	Completed bool   `gorm:"default:false"`
+	IsDone    bool   `gorm:"default:false"`
 }
+
+// !---------------------------------------------------------------------------------
+// ? validate
+// !---------------------------------------------------------------------------------
+
+// (Title or UserName, Type)
+func validateString(s, t string) error {
+	if s == "" || len(s) > 255 {
+		return fmt.Errorf("%sがないか、255文字以上です", t)
+	}
+	return nil
+}
+
+// !---------------------------------------------------------------------------------
+// ? error
+// !---------------------------------------------------------------------------------
+// error response
+
+type ErrResponse struct {
+	Error []ErrorMessage `json:"errors"`
+}
+
+type ErrorMessage struct {
+	Tittle string `json:"tittle"`
+	Detail string `json:"detail"`
+}
+
+//!---------------------------------------------------------------------------------
+
+//? userregister
+//!---------------------------------------------------------------------------------
+//request
+
+//response
+
+//usertable db migrate
+
+//error response
+
+//error message
+//!---------------------------------------------------------------------------------
+
+//? login JWT
+//!---------------------------------------------------------------------------------
+
+//request
+
+//response
+
+//error response
+
+//!---------------------------------------------------------------------------------
 
 func main() {
 	var CreateRequest TodoMethod = &TodoCreateRequest{""}
