@@ -84,9 +84,34 @@ type User struct {
 
 //!---------------------------------------------------------------------------------
 
-//? login JWT
+//? JWT
 //!---------------------------------------------------------------------------------
 //request
+//header payload signature
+type Header struct {
+	Alg string `json:"alg"`
+	Typ string `json:"typ"`
+}
+
+type Payload struct {
+	Sub string `json:"sub"`
+	Exp int    `json:"exp"`
+}
+
+type LoginRequest struct {
+	Header Header `json:"header"`
+	Payload Payload `json:"payload"`
+	Signature string `json:"signature"`
+}
+
+
+
+
+
+
+
+
+
 
 //response
 
