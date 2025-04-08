@@ -9,12 +9,14 @@ import (
 // !---------------------------------------------------------------------------------
 // response
 type Todos struct {
-	Todo []TodoResponse `json:"todos"`
+	Todo []Todo `json:"todos"`
 }
-type TodoResponse struct {
-	ID        int    `json:"id"`
-	Title     string `json:"title"`
-	IsDone    bool   `json:"isDone"`
+
+// JSON responseとDBのstruct
+type Todo struct {
+	Id     int    `json:"id" gorm:"primary_key;auto_increment"`
+	Title  string `json:"title" gorm:"size:255"`
+	IsDone bool   `json:"isDone" gorm:"default:false"`
 }
 
 type TodoMethod interface {
@@ -30,28 +32,15 @@ func (t TodoCreateRequest) CheckTitle() error {
 	return validateString(t.Title, "TodoTitle")
 }
 
-type TodoUpdateRequest struct {
-	Id        int    `json:"id"`
-	Title     string `json:"title"`
-	IsDone    bool   `json:"isDone"`
-}
-
-func (t TodoUpdateRequest) CheckTitle() error {
+func (t Todo) CheckTitle() error {
 	return validateString(t.Title, "TodoTitle")
 }
 
-func (t TodoUpdateRequest) CheckId() error {
+func (t Todo) CheckId() error {
 	if t.Id <= 0 {
 		return fmt.Errorf("Todo IDがないか、0以下です")
 	}
 	return nil
-}
-
-// gorm db migrate
-type TodoTable struct {
-	ID        int    `gorm:"primary_key;auto_increment"`
-	Title     string `gorm:"size:255"`
-	IsDone    bool   `gorm:"default:false"`
 }
 
 // !---------------------------------------------------------------------------------
@@ -82,29 +71,35 @@ type ErrorMessage struct {
 
 //!---------------------------------------------------------------------------------
 
-//? userregister
-//!---------------------------------------------------------------------------------
-//request
+// ? userregister
+// !---------------------------------------------------------------------------------
+// request
+type User struct {
+	Id       int    `json:"id" gorm:"primary_key;auto_increment"`
+	UserName string `json:"userName" gorm:"size:255"`
+	Password string `json:"password" gorm:"size:255"`
+}
 
 //response
-
-//usertable db migrate
 
 //!---------------------------------------------------------------------------------
 
 //? login JWT
 //!---------------------------------------------------------------------------------
-
 //request
 
 //response
 
 //!---------------------------------------------------------------------------------
 
+//?JWT
+//!---------------------------------------------------------------------------------
+//request
+
 func main() {
 	var CreateRequest TodoMethod = &TodoCreateRequest{""}
 	// var UpdateRequest TodoMethod = &TodoUpdateRequest{1, "a", false}
-	UpdateRequest := TodoUpdateRequest{0, "", false}
+	UpdateRequest := Todo{0, "", false}
 
 	if err := CreateRequest.CheckTitle(); err != nil {
 		fmt.Println(err)
@@ -118,8 +113,8 @@ func main() {
 		fmt.Println(err)
 	}
 
-	response := TodoResponse{1, "test", false}
-	todolist := Todos{Todo: []TodoResponse{response, response}}
+	response := Todo{1, "test", false}
+	todolist := Todos{Todo: []Todo{response, response}}
 
 	jsonTodolist, err := json.Marshal(todolist)
 	if err != nil {
