@@ -7,29 +7,14 @@ import (
 
 // ? Todo関係
 // !---------------------------------------------------------------------------------
-// response
 type Todos struct {
 	Todo []Todo `json:"todos"`
 }
 
-// JSON responseとDBのstruct
 type Todo struct {
 	Id     int    `json:"id" gorm:"primary_key;auto_increment"`
 	Title  string `json:"title" gorm:"size:255"`
 	IsDone bool   `json:"isDone" gorm:"default:false"`
-}
-
-type TodoMethod interface {
-	CheckTitle() error
-}
-
-// request
-type TodoCreateRequest struct {
-	Title string `json:"title"`
-}
-
-func (t TodoCreateRequest) CheckTitle() error {
-	return validateString(t.Title, "TodoTitle")
 }
 
 func (t Todo) CheckTitle() error {
@@ -44,6 +29,7 @@ func (t Todo) CheckId() error {
 }
 
 // !---------------------------------------------------------------------------------
+
 // ? validate
 // !---------------------------------------------------------------------------------
 
@@ -56,15 +42,15 @@ func validateString(s, t string) error {
 }
 
 // !---------------------------------------------------------------------------------
+
 // ? error
 // !---------------------------------------------------------------------------------
-// error response
 
 type ErrResponse struct {
-	Error []ErrorMessage `json:"errors"`
+	Error []ErrMessage `json:"errors"`
 }
 
-type ErrorMessage struct {
+type ErrMessage struct {
 	Tittle string `json:"tittle"`
 	Detail string `json:"detail"`
 }
@@ -73,21 +59,23 @@ type ErrorMessage struct {
 
 // ? userregister
 // !---------------------------------------------------------------------------------
-// request
 type User struct {
 	Id       int    `json:"id" gorm:"primary_key;auto_increment"`
 	UserName string `json:"userName" gorm:"size:255"`
 	Password string `json:"password" gorm:"size:255"`
 }
 
-//response
+func (u User) CheckUserName() error {
+	return validateString(u.UserName, "UserName")
+}
 
+func (u User) CheckPassword() error {
+	return validateString(u.Password, "Password")
+}
 //!---------------------------------------------------------------------------------
 
-//? JWT
-//!---------------------------------------------------------------------------------
-//request
-//header payload signature
+// ? JWT
+// !---------------------------------------------------------------------------------
 type Header struct {
 	Alg string `json:"alg"`
 	Typ string `json:"typ"`
@@ -99,34 +87,17 @@ type Payload struct {
 }
 
 type LoginRequest struct {
-	Header Header `json:"header"`
-	Payload Payload `json:"payload"`
-	Signature string `json:"signature"`
+	Header    Header  `json:"header"`
+	Payload   Payload `json:"payload"`
+	Signature string  `json:"signature"`
 }
 
-
-
-
-
-
-
-
-
-
-//response
-
 //!---------------------------------------------------------------------------------
-
-//?JWT
-//!---------------------------------------------------------------------------------
-//request
 
 func main() {
-	var CreateRequest TodoMethod = &TodoCreateRequest{""}
-	// var UpdateRequest TodoMethod = &TodoUpdateRequest{1, "a", false}
 	UpdateRequest := Todo{0, "", false}
 
-	if err := CreateRequest.CheckTitle(); err != nil {
+	if err := UpdateRequest.CheckTitle(); err != nil {
 		fmt.Println(err)
 	}
 
@@ -148,8 +119,8 @@ func main() {
 	}
 	fmt.Println(string(jsonTodolist))
 
-	errmsg := ErrorMessage{"text", "aa"}
-	errResponse := ErrResponse{Error: []ErrorMessage{errmsg, errmsg, errmsg}}
+	errmsg := ErrMessage{"text", "aa"}
+	errResponse := ErrResponse{Error: []ErrMessage{errmsg, errmsg, errmsg}}
 
 	jsonResponse, err := json.Marshal(errResponse)
 	if err != nil {
@@ -181,5 +152,6 @@ api-end-point{
 		DELETE
 	]
 }
+
 
 */
