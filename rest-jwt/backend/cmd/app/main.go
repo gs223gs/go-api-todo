@@ -3,6 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"time"
+
+	"github.com/golang-jwt/jwt"
 )
 
 // ? Todo関係
@@ -72,27 +77,31 @@ func (u User) CheckUserName() error {
 func (u User) CheckPassword() error {
 	return validateString(u.Password, "Password")
 }
-//!---------------------------------------------------------------------------------
-
-// ? JWT
-// !---------------------------------------------------------------------------------
-type Header struct {
-	Alg string `json:"alg"`
-	Typ string `json:"typ"`
-}
-
-type Payload struct {
-	Sub string `json:"sub"`
-	Exp int    `json:"exp"`
-}
-
-type LoginRequest struct {
-	Header    Header  `json:"header"`
-	Payload   Payload `json:"payload"`
-	Signature string  `json:"signature"`
-}
 
 //!---------------------------------------------------------------------------------
+
+func CreateJWT() string {
+	// 環境変数から秘密鍵を取得
+	secretKey := os.Getenv("ACCESS_SECRET_KEY")
+	
+
+	claims := jwt.MapClaims{
+		"user_id": "user_id1234",
+		"exp":     time.Now().Add(time.Hour * 72).Unix(), // 72時間が有効期限
+	}
+
+	// ヘッダーとペイロード生成
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// トークンに署名を付与
+	accessToken, err := token.SignedString([]byte(secretKey))
+	if err != nil {
+		log.Printf("トークン生成エラー: %v", err)
+		return ""
+	}
+
+	return accessToken
+}
 
 func main() {
 	UpdateRequest := Todo{0, "", false}
@@ -128,6 +137,7 @@ func main() {
 		return
 	}
 	fmt.Println(string(jsonResponse))
+
 }
 
 /*
