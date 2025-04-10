@@ -19,7 +19,7 @@ function App() {
     <>
       {isLogin ? (
         <div>
-          <button onClick={() => setIsLogin(false)}>logout</button>
+          <button onClick={() => setIsLogin(false)}>logout a</button>
           <form action="">
             <span>todo名 : </span>
             <input type="text" />
