@@ -21,7 +21,7 @@ function App() {
         <div>
           <button onClick={() => setIsLogin(false)}>logout a</button>
           <form action="">
-            <span>todo名  : </span>
+            <span>todo名 : </span>
             <input type="text" />
             <br />
             <button type="submit" onClick={handleTodoSubmit}>
