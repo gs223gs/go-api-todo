@@ -33,7 +33,7 @@ function App() {
       ) : (
         <form action="">
           <span>username : </span>
-          <input
+          <input 
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
