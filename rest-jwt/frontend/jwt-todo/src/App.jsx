@@ -31,7 +31,7 @@ function App() {
             <span>todo名 : </span>
             <input type="text"  />
             <br />
-            <button type="submit" onClick={handleTodoSubmit}>
+            <button type="submit"  onClick={handleTodoSubmit}>
               Todo作成
             </button>
             <br />
