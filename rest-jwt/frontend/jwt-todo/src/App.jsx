@@ -14,12 +14,19 @@ function App() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(false);
-
+  //todolist
+  //構造体 id todo isdone
+  const todolist = [
+    { id: 1, todo: "todo", isdone: false },
+    { id: 2, todo: "todo2", isdone: true },
+    { id: 3, todo: "todo3", isdone: false },
+  ];
+  const [todoList, setTodoList] = useState(todolist);
   return (
     <>
       {isLogin ? (
         <div>
-          <button onClick={() => setIsLogin(false)}>logout a</button>
+          <button onClick={() => setIsLogin(false)}>logout</button>
           <form action="">
             <span>todo名 : </span>
             <input type="text" />
@@ -29,6 +36,15 @@ function App() {
             </button>
             <br />
           </form>
+
+          <div>
+            {todoList.map((todo) => (
+              <div key={todo.id}>
+                {todo.todo} : {todo.isdone ? "完了" : "未完了"}
+              </div>
+            ))}
+          </div>
+
         </div>
       ) : (
         <form action="">
