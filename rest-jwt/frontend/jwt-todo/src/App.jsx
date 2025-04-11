@@ -29,9 +29,9 @@ function App() {
           <button onClick={() => setIsLogin(false)}>logout</button>
           <form action="">
             <span>todo名 : </span>
-            <input type="text" />
+            <input type="text"  />
             <br />
-            <button type="submit" onClick={handleTodoSubmit}>
+            <button type="submit"  onClick={handleTodoSubmit}>
               Todo作成
             </button>
             <br />
