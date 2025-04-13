@@ -1,0 +1,88 @@
+  流れ
+  ログイン 登録　どちらかをボタンで選択
+  選択した方のボタンに変わる stateで管理
+  ログイン完了後Todo画面に移る
+
+    1.ユーザー登録
+      formに id pass 入力
+      buttonを押すとregisterAPIにリクエスト
+      200ならば成功とポップアップ
+
+    2.ログイン画面
+      formに id pass 入力
+      buttonを押すとloginAPIにリクエスト
+      responseが200ならば成功とポップアップし，GET todos/id にリクエスト JWTを使用
+
+    3.todo画面
+      todo追加ボタンを押すとtodo追加APIにリクエスト
+      responseが200ならば成功とポップアップ
+      todo編集ボタンを押すとtodo編集APIにリクエスト
+      responseが200ならば成功とポップアップ
+      todo完了ボタンを押すとtodo完了APIにリクエスト
+      responseが200ならば成功とポップアップ
+
+frontend
+  TODO
+  login画面 済
+  register画面
+  todo画面 済
+  todo追加 済
+  todo編集
+    stateで管理
+      isEditing setIsEditing
+
+  todo完了
+    完了ボタン押下
+      PUT todos/:id にアクセス
+      レスポンスで帰ってきたものをstateで管理
+      レンダリングについて調べる
+
+  todo削除
+    削除ボタン押下
+      DELETE todos/:id にアクセス
+      レスポンスで帰ってきたものをstateで管理
+      レンダリングについて調べる
+
+  request headerにJWTを使用
+
+backend
+  TODO
+  JWTの検証
+  JWTの期限切れ
+  JWTのエラーハンドリング
+  JWTの保存
+  JWTの削除
+  JWTの更新
+  JWTの作成
+  authorizationにJWTを使用
+
+  エンドポイント
+    users /
+      POST /register JSONでid passを送信
+        user登録
+      POST /login JSONでid passを送信
+        JWTを返す
+      GET /me JWTを使用
+        user情報を返す
+      PUT /me JWTを使用
+        user情報を更新
+      DELETE /me JWTを使用
+        userを削除
+    todos / 送られてきたJWTからuser_idを取得 PUT DELETE時はそのuser_idとTODOにあるuser_idが一致するか確認
+      POST / JWTを使用
+        todoを追加
+      GET / JWTを使用
+        todoを取得
+      PUT /:id JWTを使用
+        todoを更新
+      DELETE /:id JWTを使用
+        todoを削除
+db
+  users
+    id
+    pass
+  todos
+    id
+    user_id users-id FK
+    todo
+    isDone
