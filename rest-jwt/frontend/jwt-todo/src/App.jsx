@@ -1,5 +1,8 @@
 import "./App.css";
 import { useState } from "react";
+import Register from "./component/register/register";
+import Login from "./component/login/login";
+import Todos from "./component/todos/todos";
 function App() {
   const handleLoginSubmit = (e) => {
     e.preventDefault();
@@ -24,6 +27,11 @@ function App() {
     setIsRegister(!isRegister);
     setIsLogin(!isLogin);
   };
+
+  const handleLogout = () => {
+    setIsLogin(!isLogin);
+    setIsRegister(!isRegister);
+  };
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(false);
@@ -42,70 +50,27 @@ function App() {
         {isRegister ? "login" : "register"}
       </button>
       {isRegister ? (
-        <div>
-          <p>register</p>
-          <form action="">
-            <span>username : </span>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <br />
-            <span>password : </span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <br />
-            <button type="submit" onClick={handleRegisterSubmit}>
-              Create
-            </button>
-          </form>
-        </div>
+        <Register
+          username={username}
+          password={password}
+          setUsername={setUsername}
+          setPassword={setPassword}
+          handleRegisterSubmit={handleRegisterSubmit}
+        />
       ) : isLogin ? (
-        <form action="">
-          <p>login</p>
-          <span>username : </span>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <br />
-          <span>password : </span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <br />
-          <button type="submit" onClick={handleLoginSubmit}>
-            Create
-          </button>
-        </form>
+        <Login
+          username={username}
+          password={password}
+          setUsername={setUsername}
+          setPassword={setPassword}
+          handleLoginSubmit={handleLoginSubmit}
+        />
       ) : (
-        <div>
-          <button onClick={() => setIsLogin(false)}>logout</button>
-          <form action="">
-            <span>todo名 : </span>
-            <input type="text" />
-            <br />
-            <button type="submit" onClick={handleTodoSubmit}>
-              Todo作成
-            </button>
-            <br />
-          </form>
-
-          <div>
-            {todoList.map((todo) => (
-              <div key={todo.id}>
-                {todo.todo} : {todo.isdone ? "完了" : "未完了"}
-              </div>
-            ))}
-          </div>
-        </div>
+        <Todos
+          todoList={todoList}
+          handleTodoSubmit={handleTodoSubmit}
+          handleLogout={handleLogout}
+        />
       )}
     </div>
   );
