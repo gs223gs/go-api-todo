@@ -8,7 +8,11 @@ const Todos = ({ handleLogout }) => {
     //APIを叩く
     //responseが200ならば成功とポップアップ
     //todoListを更新
+
+    setTodo("");
   };
+
+  const [todo, setTodo] = useState("");
   const todolist = [
     { id: 1, todo: "todo", isdone: false },
     { id: 2, todo: "todo2", isdone: true },
@@ -22,7 +26,7 @@ const Todos = ({ handleLogout }) => {
   return (
     <div>
       <Button text="logout" onClick={handleLogout} />
-      <TodoForm handleTodoSubmit={handleTodoSubmit} />
+      <TodoForm handleTodoSubmit={handleTodoSubmit} todo={todo} setTodo={setTodo} />
       <TodoList todoList={todoList} />
     </div>
   );
