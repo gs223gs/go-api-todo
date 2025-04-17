@@ -1,6 +1,6 @@
 import LoginForm from "../forms/LoginForm";
 
-const Login = ({ username, password, setUsername, setPassword, handleLoginSubmit }) => {
+const Login = ({ username, password, setUsername, setPassword, handleLoginSubmit, setIsLogin }) => {
   return  (
     <div>
     <LoginForm
@@ -9,6 +9,7 @@ const Login = ({ username, password, setUsername, setPassword, handleLoginSubmit
       setUsername={setUsername}
       setPassword={setPassword}
       handleLoginSubmit={handleLoginSubmit}
+      setIsLogin={setIsLogin}
     />
   </div>
   );

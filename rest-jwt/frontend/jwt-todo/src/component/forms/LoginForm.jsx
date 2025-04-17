@@ -6,8 +6,24 @@ const LoginForm = ({
   password,
   setUsername,
   setPassword,
-  handleLoginSubmit,
+  setIsLogin,
 }) => {
+
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    console.log(username, password);
+    setUsername("");
+    setPassword("");
+    //APIを叩く
+    //responseが200ならば成功とポップアップ
+    //JWTを保存
+    //GET todos/id にリクエスト JWTを使用
+    //responseが200ならば成功とポップアップ
+    //todoListを更新
+
+    //成功ならIsLoginをfalseにする
+    setIsLogin(false);
+  };
   return (
     <form action="">
       <p>login</p>
@@ -25,7 +41,7 @@ const LoginForm = ({
         onChange={(e) => setPassword(e.target.value)}
       />
       <br />
-      <Button text="Create" onClick={handleLoginSubmit} />
+      <Button text="login" onClick={handleLoginSubmit} />
     </form>
   );
 };
