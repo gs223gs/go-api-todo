@@ -1,7 +1,21 @@
 import TodoForm from "../forms/TodoForm";
 import TodoList from "../todos/TodoList";
 import Button from "../common/Button";
-const Todos = ({ todoList, handleTodoSubmit, handleLogout }) => {
+import { useState } from "react";
+const Todos = ({ handleLogout }) => {
+  const handleTodoSubmit = (e) => {
+    e.preventDefault();
+    //APIを叩く
+    //responseが200ならば成功とポップアップ
+    //todoListを更新
+  };
+  const todolist = [
+    { id: 1, todo: "todo", isdone: false },
+    { id: 2, todo: "todo2", isdone: true },
+    { id: 3, todo: "todo3", isdone: false },
+  ];
+
+  const [todoList, setTodoList] = useState(todolist);
 
   //TODO
   //formにstateを送る
